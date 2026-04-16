@@ -1,0 +1,56 @@
+{
+  "name": "painel-suporte",
+  "version": "1.0.0",
+  "description": "Painel de mensagens rápidas para Help Desk",
+  "main": "main.js",
+  "author": { "name": "Rodrigo <rodrigosilvadeveloper>@gmail.com" },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.helpdesk.painel",
+    "productName": "Painel Suporte",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Painel Suporte"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "package.json",
+      "build/icon.ico",
+      "build/logo.png",
+      "build/logotr.png"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.0.0"
+  }
+}

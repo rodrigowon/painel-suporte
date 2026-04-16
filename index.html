@@ -1,0 +1,865 @@
+/**
+ * Painel Suporte Help Desk
+ * Desenvolvido por: Rodrigo
+ * Ano: 2026
+ * Repositório: https://github.com/rodrigowon/painel-suporte.git
+ */
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Suporte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f1117;
+      --panel:   #181c25;
+      --surface: #1e2230;
+      --border:  #2a2f42;
+      --text:    #e2e6f3;
+      --muted:   #6b7394;
+      --accent:  #2959fa;
+      --accentBg:#08133b;
+      --pill:    #252a3a;
+      --input:   #111520;
+      --danger:  #f87171;
+    }
+    body.light {
+      --bg:      #f0f2f7;
+      --panel:   #ffffff;
+      --surface: #f8f9fc;
+      --border:  #b4bed1;
+      --text:    #1a1d2e;
+      --muted:   #8b90aa;
+      --accent:  #2959fa;
+      --accentBg:#e3e8ff;
+      --pill:    #eef0f8;
+      --input:   #f8f9fc;
+      --danger:  #dc2626;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── DRAG REGION ─────────────────────────────── */
+    .titlebar {
+      -webkit-app-region: drag;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+    .titlebar button, .titlebar input { -webkit-app-region: no-drag; }
+
+    .row { display: flex; align-items: center; gap: 6px; }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .icon-btn:hover           { background: var(--surface); color: var(--text); }
+    .icon-btn.minimize-btn:hover { background: #fbbf2422; border-color: #fbbf2455; color: #fbbf24; }
+    .icon-btn.close-btn:hover    { background: #f871711a; border-color: #f8717155; color: var(--danger); }
+
+    /* ── PERIOD ──────────────────────────────────── */
+    .period-row { display: flex; gap: 4px; }
+    .period-btn {
+      flex: 1;
+      background: var(--pill);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      gap: 4px; padding: 5px 4px; font-size: 11px; font-weight: 400;
+      transition: all .15s;
+    }
+    .period-btn.active-manha { background: #f59e0b22; border-color: #f59e0b66; color: #f59e0b; font-weight: 600; }
+    .period-btn.active-tarde { background: #f9731622; border-color: #f9731666; color: #f97316; font-weight: 600; }
+    .period-btn.active-noite { background: #818cf822; border-color: #818cf866; color: #818cf8; font-weight: 600; }
+
+    /* ── MESSAGE LIST ────────────────────────────── */
+    #lista {
+      overflow-y: auto;
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #lista::-webkit-scrollbar { width: 4px; }
+    #lista::-webkit-scrollbar-track { background: transparent; }
+    #lista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Two-column grid — ativado apenas se a janela for larga o suficiente */
+    @media (min-width: 480px) {
+      #lista.two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        align-content: start;
+      }
+    }
+
+    .card {
+      background: var(--pill);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background .12s, border-color .12s;
+      min-height: 44px;
+    }
+    .card:hover     { background: var(--surface); border-color: var(--accent); }
+    .card.copied    { background: var(--accentBg); border-color: rgba(56,189,248,.35); }
+    .card.drag-over { border-color: var(--accent); background: var(--accentBg); }
+    
+    /* Animação do tremor estilo iOS */
+    @keyframes tremer {
+      0%   { transform: rotate(0deg) scale(1.02); }
+      25%  { transform: rotate(-1.5deg) scale(1.02); }
+      50%  { transform: rotate(0deg) scale(1.02); }
+      75%  { transform: rotate(1.5deg) scale(1.02); }
+      100% { transform: rotate(0deg) scale(1.02); }
+    }
+
+    .card.dragging, .card.shaking {
+      opacity: 0.9;
+      background: var(--surface);
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      animation: tremer 0.25s infinite linear;
+      z-index: 10; /* Garante que a caixa flutue por cima das outras */
+    }
+
+    .card-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.35; word-break: break-word; }
+    .copy-icon { color: var(--muted); flex-shrink: 0; transition: color .15s; }
+    .card.copied .copy-icon { color: var(--accent); }
+    .card:hover  .copy-icon { color: var(--accent); }
+
+    /* Drag handle */
+    .drag-handle {
+      color: var(--border);
+      cursor: grab;
+      padding: 2px 2px;
+      border-radius: 4px;
+      display: flex; align-items: center;
+      flex-shrink: 0;
+      transition: color .12s;
+    }
+    .drag-handle:hover { color: var(--muted); }
+    .drag-handle:active { cursor: grabbing; }
+
+    .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 0; }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex; align-items: center; gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Logo button — invisible when no logo set */
+    .logo-btn {
+      background: var(--bg);          /* blends with bg = invisible */
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 2px;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .logo-btn:hover { border-color: var(--border); background: var(--surface); }
+    .logo-btn img { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; display: none; }
+    .logo-btn.has-logo { background: transparent; border-color: var(--border); }
+    .logo-btn.has-logo img { display: block; }
+
+    .footer-spacer { flex: 1; }
+
+    .btn-secondary {
+      display: flex; align-items: center; gap: 5px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted); cursor: pointer;
+      font-size: 12px; padding: 6px 12px; transition: all .15s;
+    }
+    .btn-secondary:hover { background: var(--surface); color: var(--text); }
+    .btn-primary {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--accent); border: none;
+      border-radius: 8px; color: #fff; cursor: pointer;
+      font-size: 12px; font-weight: 600; padding: 6px 12px; transition: opacity .15s;
+    }
+    .btn-primary:hover { opacity: .85; }
+
+    /* ── MODALS ──────────────────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      align-items: center; justify-content: center;
+      z-index: 999; padding: 16px;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 400px;
+      max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 13px 16px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .modal-hint  { font-size: 11px; color: var(--muted); padding: 8px 16px 4px; flex-shrink: 0; }
+    .modal-hint code { color: var(--accent); background: var(--pill); padding: 1px 4px; border-radius: 3px; }
+    .modal-list {
+      overflow-y: auto; flex: 1; padding: 8px 10px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .modal-list::-webkit-scrollbar { width: 4px; }
+    .modal-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .modal-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .modal-card-text    { flex: 1; font-size: 13px; color: var(--text); line-height: 1.5; }
+    .modal-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .sm-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; padding: 5px; transition: all .15s;
+    }
+    .sm-btn:hover        { background: var(--pill); color: var(--text); }
+    .sm-btn.danger       { border-color: rgba(248,113,113,.35); color: var(--danger); }
+    .sm-btn.danger:hover { background: rgba(248,113,113,.1); }
+    .sm-btn.save         { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .sm-btn.save:hover   { opacity: .85; }
+
+    textarea {
+      width: 100%; background: var(--input); border: 1px solid rgba(56,189,248,.35);
+      border-radius: 8px; padding: 7px 10px; color: var(--text); font-size: 13px; outline: none;
+      resize: vertical; min-height: 64px; font-family: inherit; box-sizing: border-box;
+    }
+    .edit-actions { display: flex; gap: 4px; margin-top: 6px; }
+    .edit-btn {
+      display: flex; align-items: center; gap: 4px;
+      border-radius: 6px; cursor: pointer; font-size: 12px; padding: 5px 10px; border: none;
+    }
+    .edit-btn.save   { background: var(--accent); color: #fff; font-weight: 600; }
+    .edit-btn.cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+    .add-new-btn {
+      background: var(--accent); 
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; 
+      align-items: center; 
+      justify-content: center; /* 👈 Volta a centralizar o texto e o ícone */
+      gap: 6px;
+      width: 100%;             /* 👈 Garante que ele ocupe 100% da largura da caixa */
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(2, 41, 89, 250, 0.3); /* Sombra sutil para dar destaque */
+    }
+
+    /* Efeito ao passar o mouse */
+    .add-new-btn:hover {
+      opacity: 0.85; 
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(2, 41, 89, 250, 0.45);
+    }
+
+    /* Efeito ao clicar */
+    .add-new-btn:active {
+      transform: translateY(0px);
+    }
+
+    /* ── INFO MODAL ──────────────────────────────── */
+    .info-modal {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 300px;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .info-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .info-row  { display: flex; align-items: center; gap: 12px; }
+    .info-logo-preview {
+      width: 52px; height: 52px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .info-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .info-app-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .info-version  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .info-dev      { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .info-divider  { border: none; border-top: 1px solid var(--border); }
+    .info-link-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); cursor: pointer;
+      font-size: 12px; padding: 8px 10px; transition: all .15s;
+      width: 100%; text-align: left; margin-bottom: 6px;
+    }
+    .info-link-btn:last-child { margin-bottom: 0; }
+    .info-link-btn:hover { background: var(--pill); border-color: var(--accent); color: var(--accent); }
+    .info-logo-actions { display: flex; gap: 6px; }
+    .info-action-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted); cursor: pointer;
+      font-size: 11px; padding: 6px 8px; transition: all .15s;
+    }
+    .info-action-btn:hover        { background: var(--surface); color: var(--text); }
+    .info-action-btn.danger       { border-color: rgba(248,113,113,.35); color: var(--danger); }
+    .info-action-btn.danger:hover { background: rgba(248,113,113,.1); }
+
+    svg { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── TITLEBAR ──────────────────────────────────────────── -->
+<div class="titlebar">
+  <div class="row">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <input type="text" id="inp-nome" placeholder="Seu nome..." oninput="salvarNome()">
+
+    <!-- Dark toggle -->
+    <button class="icon-btn" id="btn-dark" onclick="toggleDark()" title="Modo escuro/claro">
+      <svg id="icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+
+    <!-- [NEW] Minimize -->
+    <button class="icon-btn minimize-btn" onclick="minimizar()" title="Minimizar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+
+    <!-- Close -->
+    <button class="icon-btn close-btn" onclick="window.close()" title="Fechar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Period row — manual override still available, auto-detects on open -->
+  <div class="period-row">
+    <button class="period-btn" id="btn-manha" onclick="setPeriod('manha')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      Manhã
+    </button>
+    <button class="period-btn" id="btn-tarde" onclick="setPeriod('tarde')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>
+      Tarde
+    </button>
+    <button class="period-btn" id="btn-noite" onclick="setPeriod('noite')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      Noite
+    </button>
+  </div>
+</div>
+
+<!-- ── MESSAGE LIST ───────────────────────────────────────── -->
+<div id="lista"></div>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<div class="footer">
+  <!-- [NEW] Logo / Info button — invisible when no logo -->
+  <button id="btn-logo" class="logo-btn has-logo" onclick="abrirInfo()" title="Informações" style="background: transparent; border-color: var(--border);">
+    <img id="logo-img" src="build/logo.png" alt="Logo" style="display: block;">
+  </button>
+
+  <div class="footer-spacer"></div>
+
+  <button class="btn-secondary" onclick="abrirModal()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Mensagens
+  </button>
+  <button class="btn-primary" onclick="abrirModal(true)">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Adicionar
+  </button>
+</div>
+
+<!-- ── MESSAGES MODAL ─────────────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="fecharSeOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Gerenciar Mensagens</span>
+      <button class="icon-btn" onclick="fecharModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p class="modal-hint">Use <code>{{nome}}</code> e <code>{{saudacao}}</code> para personalizar.</p>
+    <div class="modal-list" id="modal-lista"></div>
+  </div>
+</div>
+
+<!-- ── INFO MODAL ─────────────────────────────────────────── -->
+<div class="overlay" id="overlay-info" onclick="fecharInfoSeOverlay(event)">
+  <div class="info-modal">
+    <div class="modal-header">
+      <span class="modal-title">Sobre</span>
+      <button class="icon-btn" onclick="fecharInfo()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="info-body">
+
+      <div class="info-row">
+        <div class="info-logo-preview" id="info-logo-preview">
+          <img src="build/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
+        </div>
+        <div>
+          <div class="info-app-name">Painel Suporte</div>
+          <div class="info-version">Versão 1.1.0 Beta</div>
+        </div>
+      </div>
+
+      <hr class="info-divider">
+
+      <!-- Edite estas linhas com suas informações -->
+      <div class="info-dev">
+        Desenvolvido por @rodrigowon para atendimento Help Desk Schumann.<br>
+        Feito com React, node.js e Electron.
+      </div>
+
+      <!-- Links — edite as URLs -->
+      <div>
+        <button class="info-link-btn" onclick="abrirLink('https://github.com')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          GitHub / Repositório
+          <svg style="margin-left:auto;flex-shrink:0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+        <button class="info-link-btn" onclick="abrirLink('https://wa.me/')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          WhatsApp / Contato
+          <svg style="margin-left:auto;flex-shrink:0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+      </div>
+
+      <hr class="info-divider">
+
+      <!-- Logo actions -->
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════════
+const DEFAULTS = [
+  "{{saudacao}}! Aqui é {{nome}}. Como posso ajudá-lo(a)? 😊",
+  "Só um instante, estou verificando para você. ⏳",
+  "Pode me informar o número do chamado, por favor?",
+  "Consegui identificar o problema, vou resolver agora.",
+  "Problema resolvido! ✅ Posso ajudar em mais alguma coisa?",
+  "Vou escalar para o time responsável e retorno em breve.",
+  "Obrigado pelo contato! Qualquer coisa estou por aqui. 😊",
+];
+
+const GREETINGS = { manha: "Bom dia", tarde: "Boa tarde", noite: "Boa noite" };
+
+const SVG_GRIP  = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="3" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="3" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>`;
+const SVG_COPY  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const SVG_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+let msgs      = [];
+let period    = "manha";
+let dark      = true;
+let editIdx   = null;
+let addingNew = false;
+
+// [NEW] Drag state
+let dragSrc = null;
+let dragEl  = null;
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+function load() {
+  try { msgs = JSON.parse(localStorage.getItem("hd_msgs") || "null") || [...DEFAULTS]; } catch { msgs = [...DEFAULTS]; }
+  try { dark = localStorage.getItem("hd_dark") !== "false"; } catch {}
+  try { document.getElementById("inp-nome").value = localStorage.getItem("hd_name") || ""; } catch {}
+  // [NEW] Always auto-detect period from system clock; buttons allow manual override per session
+  period = autoDetectPeriod();
+}
+
+function save() {
+  localStorage.setItem("hd_msgs", JSON.stringify(msgs));
+  localStorage.setItem("hd_dark", String(dark));
+}
+
+function salvarNome() {
+  localStorage.setItem("hd_name", document.getElementById("inp-nome").value);
+  render(true);
+}
+
+// ═══════════════════════════════════════════════════════════
+// [NEW] AUTO PERIOD DETECTION
+// ═══════════════════════════════════════════════════════════
+function autoDetectPeriod() {
+  const h = new Date().getHours();
+  if (h < 12) return "manha";
+  if (h < 18) return "tarde";
+  return "noite";
+}
+
+// ═══════════════════════════════════════════════════════════
+// VARIABLE SUBSTITUTION
+// ═══════════════════════════════════════════════════════════
+function applyVars(text) {
+  const nome = document.getElementById("inp-nome").value || "Suporte";
+  const saud = GREETINGS[period] || "Olá";
+  return text.replace(/\{\{saudacao\}\}/gi, saud).replace(/\{\{nome\}\}/gi, nome);
+}
+
+// ═══════════════════════════════════════════════════════════
+// PERIOD
+// ═══════════════════════════════════════════════════════════
+function setPeriod(p) {
+  period = p;
+  ["manha", "tarde", "noite"].forEach(k => {
+    document.getElementById("btn-" + k).className = "period-btn" + (k === p ? " active-" + k : "");
+  });
+  render(true);
+}
+
+// ═══════════════════════════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════════════════════════
+function applyDark() {
+  document.body.classList.toggle("light", !dark);
+  const sun  = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+  const moon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  document.getElementById("icon-dark").innerHTML = dark ? sun : moon;
+}
+function toggleDark() { dark = !dark; save(); applyDark(); }
+
+// ═══════════════════════════════════════════════════════════
+// [NEW] WINDOW CONTROLS (via Electron IPC through preload)
+// ═══════════════════════════════════════════════════════════
+function minimizar() {
+  if (window.electronAPI) window.electronAPI.minimize();
+}
+
+function resizeWindow() {
+  if (!window.electronAPI) return;
+  const twoCol = msgs.length > 5;
+  const w = twoCol ? 600 : 380;
+  
+  requestAnimationFrame(() => {
+    const titlebarEl = document.querySelector(".titlebar");
+    const footerEl   = document.querySelector(".footer");
+    const listaEl    = document.getElementById("lista");
+    if (!titlebarEl || !footerEl || !listaEl) return;
+
+    // 1. Simulamos a nova largura na tela temporariamente
+    const oldBodyWidth = document.body.style.width;
+    document.body.style.width = w + "px";
+
+    // 2. Removemos as amarras do flex para ler o tamanho real do conteúdo
+    const oldFlex = listaEl.style.flex;
+    const oldHeight = listaEl.style.height;
+    listaEl.style.flex = "none";
+    listaEl.style.height = "max-content";
+
+    // 3. Calculamos a altura precisa
+    const contentHeight = titlebarEl.offsetHeight + footerEl.offsetHeight + listaEl.offsetHeight;
+
+    // 4. Restauramos o layout
+    listaEl.style.flex = oldFlex;
+    listaEl.style.height = oldHeight;
+    document.body.style.width = oldBodyWidth;
+
+    // 5. Aplicamos o tamanho com os limites de segurança min/max
+    const h = Math.min(Math.max(contentHeight + 20, 320), 820);
+    window.electronAPI.setSize(w, h);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// [NEW] DRAG AND DROP REORDER
+// ═══════════════════════════════════════════════════════════
+function onDragStart(e, i) {
+  dragSrc = i;
+  dragEl  = e.target.closest(".card");
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", String(i));
+  // Small delay so the card isn't invisible before drag image renders
+  setTimeout(() => { if (dragEl) dragEl.classList.add("dragging"); }, 0);
+}
+
+function onDragEnd(e) {
+  if (dragEl) dragEl.classList.remove("dragging");
+  if (dragEl) dragEl.classList.remove("shaking");
+  document.querySelectorAll(".card.drag-over").forEach(c => c.classList.remove("drag-over"));
+  dragSrc = null;
+  dragEl  = null;
+}
+
+function onCardDragOver(e, i) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  document.querySelectorAll(".card.drag-over").forEach(c => c.classList.remove("drag-over"));
+  e.currentTarget.classList.add("drag-over");
+}
+
+function onCardDrop(e, i) {
+  e.preventDefault();
+  e.currentTarget.classList.remove("drag-over");
+  if (dragSrc === null || dragSrc === i) return;
+  const [item] = msgs.splice(dragSrc, 1);
+  msgs.splice(i, 0, item);
+  dragSrc = null; dragEl = null;
+  save(); render();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER MAIN LIST
+// [NEW] drag handles + two-column grid + auto window resize
+// ═══════════════════════════════════════════════════════════
+function render(skipResize = false) {
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  // [NEW] Switch to 2-column grid when more than 5 messages
+  lista.classList.toggle("two-col", msgs.length > 5);
+
+  if (msgs.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Nenhuma mensagem. Adicione uma abaixo!";
+    lista.appendChild(empty);
+    
+    if (!skipResize) resizeWindow();
+    return;
+  }
+
+  msgs.forEach((msg, i) => {
+    const texto = applyVars(msg);
+    const div   = document.createElement("div");
+    div.className = "card";
+
+    // Drop target attributes
+    div.setAttribute("ondragover", `onCardDragOver(event,${i})`);
+    div.setAttribute("ondrop",     `onCardDrop(event,${i})`);
+
+    // Click to copy, but not if clicking the drag handle
+    div.onclick = (e) => {
+      if (!e.target.closest(".drag-handle")) copiar(texto, div);
+    };
+
+    div.innerHTML = `
+      <div class="drag-handle"
+          draggable="true"
+          ondragstart="onDragStart(event,${i})"
+          ondragend="onDragEnd(event)"
+          onmousedown="this.closest('.card').classList.add('shaking')"
+          onmouseup="this.closest('.card').classList.remove('shaking')"
+          onmouseleave="this.closest('.card').classList.remove('shaking')"
+          onclick="event.stopPropagation()"
+          title="Arrastar para reordenar">${SVG_GRIP}</div>
+      <div class="card-text">${texto}</div>
+      <div class="copy-icon">${SVG_COPY}</div>`;
+
+    lista.appendChild(div);
+  });
+
+  if (!skipResize) resizeWindow();
+}
+
+function copiar(texto, card) {
+  navigator.clipboard.writeText(texto).then(() => {
+    card.classList.add("copied");
+    card.querySelector(".copy-icon").innerHTML = SVG_CHECK;
+    setTimeout(() => {
+      card.classList.remove("copied");
+      card.querySelector(".copy-icon").innerHTML = SVG_COPY;
+    }, 1800);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGES MODAL (unchanged from working version)
+// ═══════════════════════════════════════════════════════════
+function abrirModal(comecarAdicionando = false) {
+  editIdx = null; addingNew = false;
+  document.getElementById("overlay").classList.add("open");
+  renderModal();
+  if (comecarAdicionando) setTimeout(() => startAddNew(), 50);
+}
+function fecharModal() {
+  document.getElementById("overlay").classList.remove("open");
+  editIdx = null; addingNew = false;
+}
+function fecharSeOverlay(e) { if (e.target === e.currentTarget) fecharModal(); }
+
+function renderModal() {
+  const lista = document.getElementById("modal-lista");
+  lista.innerHTML = "";
+
+  msgs.forEach((msg, i) => {
+    const div = document.createElement("div");
+    div.className = "modal-card";
+
+    if (editIdx === i) {
+      div.innerHTML = `
+        <div style="flex:1">
+          <textarea id="edit-ta">${msg}</textarea>
+          <div class="edit-actions">
+            <button class="edit-btn save" onclick="saveEdit(${i})">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2l11 0 5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salvar
+            </button>
+            <button class="edit-btn cancel" onclick="cancelEdit()">Cancelar</button>
+          </div>
+        </div>`;
+      setTimeout(() => {
+        const ta = document.getElementById("edit-ta");
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }, 30);
+    } else {
+      div.innerHTML = `
+        <div class="modal-card-text">${applyVars(msg)}</div>
+        <div class="modal-card-actions">
+          <button class="sm-btn" onclick="startEdit(${i})" title="Editar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="sm-btn danger" onclick="deleteMsg(${i})" title="Excluir">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>`;
+    }
+    lista.appendChild(div);
+  });
+
+  if (addingNew) {
+    const div = document.createElement("div");
+    div.className = "new-card";
+    div.innerHTML = `
+      <textarea id="new-ta" placeholder="Nova mensagem..."></textarea>
+      <div class="edit-actions">
+        <button class="edit-btn save" onclick="saveNew()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2l11 0 5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar
+        </button>
+        <button class="edit-btn cancel" onclick="cancelNew()">Cancelar</button>
+      </div>`;
+    lista.appendChild(div);
+    setTimeout(() => { const ta = document.getElementById("new-ta"); if (ta) ta.focus(); }, 30);
+  } else {
+    const btn = document.createElement("button");
+    btn.className = "add-new-btn";
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nova mensagem`;
+    btn.onclick = startAddNew;
+    lista.appendChild(btn);
+  }
+}
+
+function startEdit(i)  { editIdx = i; addingNew = false; renderModal(); }
+function cancelEdit()  { editIdx = null; renderModal(); }
+function saveEdit(i) {
+  const val = (document.getElementById("edit-ta")?.value || "").trim();
+  if (!val) return;
+  msgs[i] = val; editIdx = null;
+  save(); render(); renderModal();
+}
+function deleteMsg(i) {
+  msgs.splice(i, 1);
+  if (editIdx === i) editIdx = null;
+  save(); render(); renderModal();
+}
+function startAddNew() { addingNew = true; editIdx = null; renderModal(); }
+function cancelNew()   { addingNew = false; renderModal(); }
+function saveNew() {
+  const val = (document.getElementById("new-ta")?.value || "").trim();
+  if (!val) return;
+  msgs.push(val); addingNew = false;
+  save(); render(); renderModal();
+}
+
+// ═══════════════════════════════════════════════════════════
+// [NEW] INFO MODAL
+// ═══════════════════════════════════════════════════════════
+function abrirInfo() {
+  document.getElementById("overlay-info").classList.add("open");
+}
+
+function fecharInfo() {
+  document.getElementById("overlay-info").classList.remove("open");
+}
+
+function fecharInfoSeOverlay(e) { if (e.target === e.currentTarget) fecharInfo(); }
+
+function abrirLink(url) {
+  if (window.electronAPI) window.electronAPI.openExternal(url);
+  else window.open(url, "_blank");
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+load();
+applyDark();
+setPeriod(period);   // applies auto-detected period and highlights correct button
+render();
+</script>
+</body>
+</html>
