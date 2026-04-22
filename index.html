@@ -1,46 +1,72 @@
-/**
- * Painel Suporte Help Desk
- * Desenvolvido por: Rodrigo
- * Ano: 2026
- * Repositório: https://github.com/rodrigowon/painel-suporte.git
- */
-
 <!DOCTYPE html>
+<!--
+  Hayai Desk — Painel de Suporte para atendimento rápido
+  Desenvolvido por: Rodrigo Won
+  Ano: 2026
+  Repositório: https://github.com/rodrigowon/painel-suporte.git
+-->
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Suporte</title>
+  <title>Hayai Desk</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── TEMA ESCURO (padrão) ──────────────────────────────── */
     :root {
-      --bg:      #0f1117;
-      --panel:   #181c25;
-      --surface: #1e2230;
-      --border:  #2a2f42;
-      --text:    #e2e6f3;
-      --muted:   #6b7394;
-      --accent:  #2959fa;
-      --accentBg:#08133b;
-      --pill:    #252a3a;
-      --input:   #111520;
-      --danger:  #f87171;
-    }
-    body.light {
-      --bg:      #f0f2f7;
-      --panel:   #ffffff;
-      --surface: #f8f9fc;
-      --border:  #b4bed1;
-      --text:    #1a1d2e;
-      --muted:   #8b90aa;
-      --accent:  #2959fa;
-      --accentBg:#e3e8ff;
-      --pill:    #eef0f8;
-      --input:   #f8f9fc;
-      --danger:  #dc2626;
+      --bg:       #0f1117;
+      --panel:    #181c25;
+      --surface:  #1e2230;
+      --border:   #2a2f42;
+      --text:     #e2e6f3;
+      --muted:    #6b7394;
+      --accent:   #2959fa;
+      --accentBg: #08133b;
+      --pill:     #252a3a;
+      --input:    #111520;
+      --danger:   #f87171;
+      /* tokens de sugestão — definidos uma vez, usados nos dois temas */
+      --suggest-bg:       rgba(255,255,255,.04);
+      --suggest-border:   rgba(255,255,255,.08);
+      --suggest-text:     #c8cfdd;
+      --suggest-bg-hov:   rgba(255,255,255,.06);
+      --suggest-brd-hov:  rgba(255,255,255,.14);
+      --suggest-text-hov: #d6dceb;
+      --suggest-bg-act:   rgba(41,89,250,.10);
+      --suggest-brd-act:  rgba(41,89,250,.28);
+      --suggest-text-act: #dfe5f3;
     }
 
+    /* ── TEMA CLARO ────────────────────────────────────────── */
+    body.light {
+      --bg:       #f0f2f7;
+      --panel:    #ffffff;
+      --surface:  #f8f9fc;
+      --border:   #b4bed1;
+      --text:     #1a1d2e;
+      --muted:    #8b90aa;
+      --accent:   #2959fa;
+      --accentBg: #e3e8ff;
+      --pill:     #eef0f8;
+      --input:    #f8f9fc;
+      --danger:   #dc2626;
+      --suggest-bg:       #e9edf7;
+      --suggest-border:   #c7d0e3;
+      --suggest-text:     #667089;
+      --suggest-bg-hov:   #dde5f3;
+      --suggest-brd-hov:  #b4c0d8;
+      --suggest-text-hov: #49536a;
+      --suggest-bg-act:   #dfe7ff;
+      --suggest-brd-act:  #9db2ff;
+      --suggest-text-act: #33415c;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+        LAYOUT BASE
+        body é o flex container principal:
+        .titlebar → [#view-botoes | #view-texto] → .footer
+    ─────────────────────────────────────────────────────────── */
     body {
       font-family: system-ui, sans-serif;
       background: var(--bg);
@@ -52,7 +78,7 @@
       flex-direction: column;
     }
 
-    /* ── DRAG REGION ─────────────────────────────── */
+    /* ── TITLEBAR / REGIÃO DE DRAG ─────────────────────────── */
     .titlebar {
       -webkit-app-region: drag;
       background: var(--surface);
@@ -63,7 +89,8 @@
       gap: 7px;
       flex-shrink: 0;
     }
-    .titlebar button, .titlebar input { -webkit-app-region: no-drag; }
+    .titlebar button,
+    .titlebar input { -webkit-app-region: no-drag; }
 
     .row { display: flex; align-items: center; gap: 6px; }
 
@@ -79,6 +106,7 @@
     }
     input[type="text"]::placeholder { color: var(--muted); }
 
+    /* ── BOTÕES DE ÍCONE (titlebar) ────────────────────────── */
     .icon-btn {
       background: transparent;
       border: 1px solid var(--border);
@@ -89,12 +117,18 @@
       display: flex; align-items: center; justify-content: center;
       transition: all .15s;
     }
-    .icon-btn:hover           { background: var(--surface); color: var(--text); }
+    .icon-btn:hover              { background: var(--surface); color: var(--text); }
     .icon-btn.minimize-btn:hover { background: #fbbf2422; border-color: #fbbf2455; color: #fbbf24; }
+    .icon-btn.maximize-btn:hover { background: #2959fa22; border-color: #2959fa55; color: var(--accent); }
     .icon-btn.close-btn:hover    { background: #f871711a; border-color: #f8717155; color: var(--danger); }
 
-    /* ── PERIOD ──────────────────────────────────── */
-    .period-row { display: flex; gap: 4px; }
+    /* ── BOTÕES DE PERÍODO (manhã / tarde / noite) ─────────── */
+    .period-row {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px 0;
+      flex-shrink: 0;
+    }
     .period-btn {
       flex: 1;
       background: var(--pill);
@@ -103,14 +137,27 @@
       color: var(--muted);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      gap: 4px; padding: 5px 4px; font-size: 11px; font-weight: 400;
+      gap: 4px;
+      padding: 5px 4px;
+      font-size: 11px;
+      font-weight: 400;
       transition: all .15s;
     }
     .period-btn.active-manha { background: #f59e0b22; border-color: #f59e0b66; color: #f59e0b; font-weight: 600; }
     .period-btn.active-tarde { background: #f9731622; border-color: #f9731666; color: #f97316; font-weight: 600; }
     .period-btn.active-noite { background: #818cf822; border-color: #818cf866; color: #818cf8; font-weight: 600; }
 
-    /* ── MESSAGE LIST ────────────────────────────── */
+    /* ── VIEWS (área central — apenas uma visível por vez) ──── */
+    #view-botoes,
+    #view-texto {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #view-texto { display: none; }
+
+    /* ── LISTA DE MENSAGENS (modo botões) ──────────────────── */
     #lista {
       overflow-y: auto;
       flex: 1;
@@ -118,12 +165,16 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      /* centraliza o conteúdo em tela cheia sem esticar os cards */
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
     }
-    #lista::-webkit-scrollbar { width: 4px; }
+    #lista::-webkit-scrollbar       { width: 4px; }
     #lista::-webkit-scrollbar-track { background: transparent; }
     #lista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    /* Two-column grid — ativado apenas se a janela for larga o suficiente */
+    /* grid de 2 colunas quando há mais de 5 mensagens */
     @media (min-width: 480px) {
       #lista.two-col {
         display: grid;
@@ -133,6 +184,7 @@
       }
     }
 
+    /* ── CARD DE MENSAGEM ───────────────────────────────────── */
     .card {
       background: var(--pill);
       border: 1px solid var(--border);
@@ -144,48 +196,46 @@
       min-height: 44px;
     }
     .card:hover     { background: var(--surface); border-color: var(--accent); }
-    .card.copied    { background: var(--accentBg); border-color: rgba(56,189,248,.35); }
+    .card.copied    { background: var(--accentBg); border-color: rgba(41,89,250,.35); }
     .card.drag-over { border-color: var(--accent); background: var(--accentBg); }
-    
-    /* Animação do tremor estilo iOS */
-    @keyframes tremer {
-      0%   { transform: rotate(0deg) scale(1.02); }
-      25%  { transform: rotate(-1.5deg) scale(1.02); }
-      50%  { transform: rotate(0deg) scale(1.02); }
-      75%  { transform: rotate(1.5deg) scale(1.02); }
-      100% { transform: rotate(0deg) scale(1.02); }
-    }
 
-    .card.dragging, .card.shaking {
-      opacity: 0.9;
+    @keyframes tremer {
+      0%   { transform: rotate(0deg)    scale(1.02); }
+      25%  { transform: rotate(-1.5deg) scale(1.02); }
+      50%  { transform: rotate(0deg)    scale(1.02); }
+      75%  { transform: rotate(1.5deg)  scale(1.02); }
+      100% { transform: rotate(0deg)    scale(1.02); }
+    }
+    .card.dragging,
+    .card.shaking {
+      opacity: .9;
       background: var(--surface);
       border-color: var(--accent);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      animation: tremer 0.25s infinite linear;
-      z-index: 10; /* Garante que a caixa flutue por cima das outras */
+      box-shadow: 0 8px 20px rgba(0,0,0,.2);
+      animation: tremer .25s infinite linear;
+      z-index: 10;
     }
 
-    .card-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.35; word-break: break-word; }
-    .copy-icon { color: var(--muted); flex-shrink: 0; transition: color .15s; }
+    .card-text  { flex: 1; font-size: 12px; color: var(--text); line-height: 1.35; word-break: break-word; }
+    .copy-icon  { color: var(--muted); flex-shrink: 0; transition: color .15s; }
     .card.copied .copy-icon { color: var(--accent); }
     .card:hover  .copy-icon { color: var(--accent); }
 
-    /* Drag handle */
     .drag-handle {
       color: var(--border);
       cursor: grab;
-      padding: 2px 2px;
+      padding: 2px;
       border-radius: 4px;
       display: flex; align-items: center;
       flex-shrink: 0;
       transition: color .12s;
     }
-    .drag-handle:hover { color: var(--muted); }
+    .drag-handle:hover  { color: var(--muted); }
     .drag-handle:active { cursor: grabbing; }
 
     .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 0; }
 
-    /* ── FOOTER ──────────────────────────────────── */
+    /* ── FOOTER ─────────────────────────────────────────────── */
     .footer {
       border-top: 1px solid var(--border);
       padding: 8px 12px;
@@ -193,9 +243,8 @@
       flex-shrink: 0;
     }
 
-    /* Logo button — invisible when no logo set */
     .logo-btn {
-      background: var(--bg);          /* blends with bg = invisible */
+      background: var(--bg);
       border: 1px solid transparent;
       border-radius: 8px;
       cursor: pointer;
@@ -206,10 +255,10 @@
       flex-shrink: 0;
       overflow: hidden;
     }
-    .logo-btn:hover { border-color: var(--border); background: var(--surface); }
-    .logo-btn img { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; display: none; }
-    .logo-btn.has-logo { background: transparent; border-color: var(--border); }
-    .logo-btn.has-logo img { display: block; }
+    .logo-btn:hover           { border-color: var(--border); background: var(--surface); }
+    .logo-btn img             { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; display: none; }
+    .logo-btn.has-logo        { background: transparent; border-color: var(--border); }
+    .logo-btn.has-logo img    { display: block; }
 
     .footer-spacer { flex: 1; }
 
@@ -220,15 +269,26 @@
       font-size: 12px; padding: 6px 12px; transition: all .15s;
     }
     .btn-secondary:hover { background: var(--surface); color: var(--text); }
+
     .btn-primary {
       display: flex; align-items: center; gap: 5px;
       background: var(--accent); border: none;
       border-radius: 8px; color: #fff; cursor: pointer;
-      font-size: 12px; font-weight: 600; padding: 6px 12px; transition: opacity .15s;
+      font-size: 12px; font-weight: 600; padding: 6px 12px;
+      transition: opacity .15s;
     }
     .btn-primary:hover { opacity: .85; }
 
-    /* ── MODALS ──────────────────────────────────── */
+    .settings-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--muted); cursor: pointer;
+      font-size: 12px; padding: 6px 12px; transition: all .15s;
+    }
+    .settings-btn:hover  { background: var(--surface); color: var(--text); }
+    .settings-btn.active { background: var(--accentBg); border-color: var(--accent); color: var(--accent); }
+
+    /* ── MODAIS (overlay compartilhado) ─────────────────────── */
     .overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,.6);
@@ -250,11 +310,12 @@
     .modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
     .modal-hint  { font-size: 11px; color: var(--muted); padding: 8px 16px 4px; flex-shrink: 0; }
     .modal-hint code { color: var(--accent); background: var(--pill); padding: 1px 4px; border-radius: 3px; }
+
     .modal-list {
       overflow-y: auto; flex: 1; padding: 8px 10px;
       display: flex; flex-direction: column; gap: 6px;
     }
-    .modal-list::-webkit-scrollbar { width: 4px; }
+    .modal-list::-webkit-scrollbar       { width: 4px; }
     .modal-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .modal-card {
@@ -277,7 +338,7 @@
     .sm-btn.save:hover   { opacity: .85; }
 
     textarea {
-      width: 100%; background: var(--input); border: 1px solid rgba(56,189,248,.35);
+      width: 100%; background: var(--input); border: 1px solid rgba(41,89,250,.35);
       border-radius: 8px; padding: 7px 10px; color: var(--text); font-size: 13px; outline: none;
       resize: vertical; min-height: 64px; font-family: inherit; box-sizing: border-box;
     }
@@ -290,36 +351,16 @@
     .edit-btn.cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); }
 
     .add-new-btn {
-      background: var(--accent); 
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex; 
-      align-items: center; 
-      justify-content: center; /* 👈 Volta a centralizar o texto e o ícone */
-      gap: 6px;
-      width: 100%;             /* 👈 Garante que ele ocupe 100% da largura da caixa */
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 6px rgba(2, 41, 89, 250, 0.3); /* Sombra sutil para dar destaque */
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; padding: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; transition: all .2s;
     }
+    .add-new-btn:hover  { opacity: .85; transform: translateY(-1px); }
+    .add-new-btn:active { transform: translateY(0); }
 
-    /* Efeito ao passar o mouse */
-    .add-new-btn:hover {
-      opacity: 0.85; 
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(2, 41, 89, 250, 0.45);
-    }
-
-    /* Efeito ao clicar */
-    .add-new-btn:active {
-      transform: translateY(0px);
-    }
-
-    /* ── INFO MODAL ──────────────────────────────── */
+    /* ── MODAL "SOBRE" ─────────────────────────────────────── */
     .info-modal {
       background: var(--panel); border: 1px solid var(--border);
       border-radius: 14px; width: 100%; max-width: 300px;
@@ -327,6 +368,7 @@
     }
     .info-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
     .info-row  { display: flex; align-items: center; gap: 12px; }
+
     .info-logo-preview {
       width: 52px; height: 52px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 10px;
@@ -334,10 +376,12 @@
       overflow: hidden; flex-shrink: 0;
     }
     .info-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+
     .info-app-name { font-size: 15px; font-weight: 600; color: var(--text); }
     .info-version  { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .info-dev      { font-size: 12px; color: var(--muted); line-height: 1.6; }
     .info-divider  { border: none; border-top: 1px solid var(--border); }
+
     .info-link-btn {
       display: flex; align-items: center; gap: 8px;
       background: var(--surface); border: 1px solid var(--border);
@@ -347,29 +391,122 @@
     }
     .info-link-btn:last-child { margin-bottom: 0; }
     .info-link-btn:hover { background: var(--pill); border-color: var(--accent); color: var(--accent); }
-    .info-logo-actions { display: flex; gap: 6px; }
-    .info-action-btn {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 8px; color: var(--muted); cursor: pointer;
-      font-size: 11px; padding: 6px 8px; transition: all .15s;
-    }
-    .info-action-btn:hover        { background: var(--surface); color: var(--text); }
-    .info-action-btn.danger       { border-color: rgba(248,113,113,.35); color: var(--danger); }
-    .info-action-btn.danger:hover { background: rgba(248,113,113,.1); }
 
     svg { display: block; }
+
+    /* ──────────────────────────────────────────────────────────
+        MODO DIGITAÇÃO — Smart Compose
+        O input e o ghost-text compartilham exatamente os mesmos
+        valores de font, padding, line-height e box-sizing para
+        que o texto fantasma fique pixel-perfect alinhado.
+    ─────────────────────────────────────────────────────────── */
+
+    #view-texto {
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .smart-compose-icon { margin-bottom: 16px; opacity: .7; }
+
+    /* Container que empilha ghost (z-index 1) e input (z-index 2) */
+    .smart-input-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      height: 42px;
+      margin: 0 auto;
+    }
+
+    .smart-input,
+    .ghost-text {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 40px;
+      padding: 0 14px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      white-space: pre;
+    }
+
+    .smart-input {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      outline: none;
+      z-index: 2;
+      caret-color: var(--accent);
+    }
+    .smart-input:focus         { border-color: var(--accent); }
+    .smart-input.copied-flash  { border-color: #4ade80 !important; }
+
+    .ghost-text {
+      background: var(--input);
+      color: var(--muted);
+      border: 1px solid transparent;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Chips de sugestões — usam variáveis CSS para adaptar ao tema */
+    .smart-suggestions {
+      width: 100%;
+      max-width: 700px;
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      min-height: 38px;
+    }
+
+    .smart-suggestion {
+      flex: 1 1 180px;
+      min-width: 0;
+      max-width: 100%;
+      background: var(--suggest-bg);
+      border: 1px solid var(--suggest-border);
+      color: var(--suggest-text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .smart-suggestion:hover  { background: var(--suggest-bg-hov);  border-color: var(--suggest-brd-hov);  color: var(--suggest-text-hov); }
+    .smart-suggestion.active { background: var(--suggest-bg-act);  border-color: var(--suggest-brd-act);  color: var(--suggest-text-act); }
+
+    /* Dica de atalho de teclado */
+    .smart-hint {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .2s;
+      text-align: center;
+    }
+    .smart-hint.visible { opacity: 1; }
+    .smart-hint strong  { color: var(--text); }
   </style>
 </head>
 <body>
 
-<!-- ── TITLEBAR ──────────────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════════
+      TITLEBAR — barra de topo arrastável com nome e controles
+════════════════════════════════════════════════════════════ -->
 <div class="titlebar">
   <div class="row">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <input type="text" id="inp-nome" placeholder="Seu nome..." oninput="salvarNome()">
+    <input type="text" id="inp-nome" placeholder="Atendente..." oninput="salvarNome()">
 
-    <!-- Dark toggle -->
     <button class="icon-btn" id="btn-dark" onclick="toggleDark()" title="Modo escuro/claro">
       <svg id="icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="5"/>
@@ -380,22 +517,30 @@
       </svg>
     </button>
 
-    <!-- [NEW] Minimize -->
     <button class="icon-btn minimize-btn" onclick="minimizar()" title="Minimizar">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
     </button>
 
-    <!-- Close -->
+    <button class="icon-btn maximize-btn" onclick="maximizar()" title="Maximizar / Restaurar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+      </svg>
+    </button>
+
     <button class="icon-btn close-btn" onclick="window.close()" title="Fechar">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
   </div>
+</div>
 
-  <!-- Period row — manual override still available, auto-detects on open -->
+<!-- ══════════════════════════════════════════════════════════
+      VIEW BOTÕES — seletor de período + lista de mensagens
+════════════════════════════════════════════════════════════ -->
+<div id="view-botoes">
   <div class="period-row">
     <button class="period-btn" id="btn-manha" onclick="setPeriod('manha')">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -410,16 +555,40 @@
       Noite
     </button>
   </div>
+  <div id="lista"></div>
 </div>
 
-<!-- ── MESSAGE LIST ───────────────────────────────────────── -->
-<div id="lista"></div>
+<!-- ══════════════════════════════════════════════════════════
+      VIEW DIGITAÇÃO — smart compose com texto preditivo
+════════════════════════════════════════════════════════════ -->
+<div id="view-texto">
+  <div class="smart-compose-icon">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+  </div>
 
-<!-- ── FOOTER ────────────────────────────────────────────── -->
+  <div class="smart-input-container">
+    <div id="ghost-text" class="ghost-text"></div>
+    <input type="text" id="smart-input" class="smart-input"
+          placeholder="Comece a digitar..."
+          autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="smart-suggestions" id="smart-suggestions"></div>
+
+  <div class="smart-hint" id="smart-hint">
+    Pressione <strong>Tab</strong> ou <strong>Enter</strong> para autocompletar e copiar.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+      FOOTER — sempre visível (flex-shrink: 0)
+════════════════════════════════════════════════════════════ -->
 <div class="footer">
-  <!-- [NEW] Logo / Info button — invisible when no logo -->
-  <button id="btn-logo" class="logo-btn has-logo" onclick="abrirInfo()" title="Informações" style="background: transparent; border-color: var(--border);">
-    <img id="logo-img" src="build/logo.png" alt="Logo" style="display: block;">
+  <button id="btn-logo" class="logo-btn has-logo" onclick="abrirInfo()" title="Informações"
+          style="background:transparent; border-color:var(--border);">
+    <img id="logo-img" src="build/logo.png" alt="Logo" style="display:block;">
   </button>
 
   <div class="footer-spacer"></div>
@@ -428,13 +597,24 @@
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Mensagens
   </button>
+
   <button class="btn-primary" onclick="abrirModal(true)">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Adicionar
   </button>
+
+  <button class="settings-btn" id="btn-mode" onclick="toggleMode()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+      <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/>
+    </svg>
+    Digitação
+  </button>
 </div>
 
-<!-- ── MESSAGES MODAL ─────────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════════
+      MODAL — Gerenciar Mensagens
+════════════════════════════════════════════════════════════ -->
 <div class="overlay" id="overlay" onclick="fecharSeOverlay(event)">
   <div class="modal">
     <div class="modal-header">
@@ -448,7 +628,9 @@
   </div>
 </div>
 
-<!-- ── INFO MODAL ─────────────────────────────────────────── -->
+<!-- ══════════════════════════════════════════════════════════
+      MODAL — Sobre / Informações
+════════════════════════════════════════════════════════════ -->
 <div class="overlay" id="overlay-info" onclick="fecharInfoSeOverlay(event)">
   <div class="info-modal">
     <div class="modal-header">
@@ -458,28 +640,25 @@
       </button>
     </div>
     <div class="info-body">
-
       <div class="info-row">
         <div class="info-logo-preview" id="info-logo-preview">
           <img src="build/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">
         </div>
         <div>
-          <div class="info-app-name">Painel Suporte</div>
-          <div class="info-version">Versão 1.1.0 Beta</div>
+          <div class="info-app-name">Hayai Desk</div>
+          <div class="info-version">Versão 1.2.0</div>
         </div>
       </div>
 
       <hr class="info-divider">
 
-      <!-- Edite estas linhas com suas informações -->
       <div class="info-dev">
         Desenvolvido por @rodrigowon para atendimento Help Desk Schumann.<br>
-        Feito com React, node.js e Electron.
+        Feito com Electron e Vanilla JS.
       </div>
 
-      <!-- Links — edite as URLs -->
       <div>
-        <button class="info-link-btn" onclick="abrirLink('https://github.com')">
+        <button class="info-link-btn" onclick="abrirLink('https://github.com/rodrigowon/painel-suporte.git')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
           GitHub / Repositório
           <svg style="margin-left:auto;flex-shrink:0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -490,19 +669,16 @@
           <svg style="margin-left:auto;flex-shrink:0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </button>
       </div>
-
-      <hr class="info-divider">
-
-      <!-- Logo actions -->
-
     </div>
   </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// CONSTANTS & STATE
+// CONSTANTES E ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════════
+
+/** Mensagens padrão carregadas quando não há dados salvos */
 const DEFAULTS = [
   "{{saudacao}}! Aqui é {{nome}}. Como posso ajudá-lo(a)? 😊",
   "Só um instante, estou verificando para você. ⏳",
@@ -515,44 +691,398 @@ const DEFAULTS = [
 
 const GREETINGS = { manha: "Bom dia", tarde: "Boa tarde", noite: "Boa noite" };
 
+/** SVGs reutilizados nos cards da lista */
 const SVG_GRIP  = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.3"/><circle cx="7" cy="2" r="1.3"/><circle cx="3" cy="7" r="1.3"/><circle cx="7" cy="7" r="1.3"/><circle cx="3" cy="12" r="1.3"/><circle cx="7" cy="12" r="1.3"/></svg>`;
 const SVG_COPY  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const SVG_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-let msgs      = [];
-let period    = "manha";
-let dark      = true;
-let editIdx   = null;
-let addingNew = false;
-
-// [NEW] Drag state
-let dragSrc = null;
-let dragEl  = null;
+let msgs      = [];      // array de mensagens salvas
+let period    = "manha"; // período atual: manha | tarde | noite
+let dark      = true;    // tema escuro ativo?
+let editIdx   = null;    // índice da mensagem em edição no modal
+let addingNew = false;   // campo de nova mensagem aberto no modal?
+let dragSrc   = null;    // índice de origem no drag & drop
+let dragEl    = null;    // elemento DOM sendo arrastado
+let modoAtual = "botoes"; // modo ativo: "botoes" | "texto"
 
 // ═══════════════════════════════════════════════════════════
-// STORAGE
+// ALTERNÂNCIA DE MODO (botões ↔ digitação)
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * Alterna entre o modo de botões (lista de mensagens) e o modo de
+ * digitação (smart compose). Atualiza o ícone e estado do botão.
+ */
+function toggleMode() {
+  const viewBotoes = document.getElementById("view-botoes");
+  const viewTexto  = document.getElementById("view-texto");
+  const btnMode    = document.getElementById("btn-mode");
+
+  if (modoAtual === "botoes") {
+    modoAtual = "texto";
+    viewBotoes.style.display = "none";
+    viewTexto.style.display  = "flex";
+    btnMode.classList.add("active");
+    btnMode.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg> Botões`;
+    setTimeout(() => document.getElementById("smart-input").focus(), 50);
+  } else {
+    modoAtual = "botoes";
+    viewBotoes.style.display = "flex";
+    viewTexto.style.display  = "none";
+    btnMode.classList.remove("active");
+    btnMode.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+        <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/>
+      </svg> Digitação`;
+    // Limpa o campo ao sair do modo digitação
+    clearSmartCompose();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SMART COMPOSE — texto preditivo com fuzzy search
+// ═══════════════════════════════════════════════════════════
+
+let currentPrediction      = "";
+let currentSuggestions     = [];
+let currentSuggestionIndex = 0;
+
+/** Remove acentos e converte para minúsculas para comparação normalizada */
+function normalizeText(str = "") {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+/** Divide string em tokens alfanuméricos */
+function tokenize(str = "") {
+  return normalizeText(str).split(/[^a-z0-9]+/i).filter(Boolean);
+}
+
+/** Algoritmo de Jaro para similaridade entre strings curtas */
+function jaroSimilarity(a, b) {
+  a = normalizeText(a);
+  b = normalizeText(b);
+  if (a === b) return 1;
+  if (!a.length || !b.length) return 0;
+
+  const matchDistance = Math.floor(Math.max(a.length, b.length) / 2) - 1;
+  const aMatches = new Array(a.length).fill(false);
+  const bMatches = new Array(b.length).fill(false);
+  let matches = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    const start = Math.max(0, i - matchDistance);
+    const end   = Math.min(i + matchDistance + 1, b.length);
+    for (let j = start; j < end; j++) {
+      if (bMatches[j] || a[i] !== b[j]) continue;
+      aMatches[i] = bMatches[j] = true;
+      matches++;
+      break;
+    }
+  }
+
+  if (!matches) return 0;
+
+  let k = 0, transpositions = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (!aMatches[i]) continue;
+    while (!bMatches[k]) k++;
+    if (a[i] !== b[k]) transpositions++;
+    k++;
+  }
+
+  return (matches / a.length + matches / b.length + (matches - transpositions / 2) / matches) / 3;
+}
+
+/** Jaro-Winkler: bônus para prefixos comuns (até 4 caracteres) */
+function jaroWinkler(a, b) {
+  const j = jaroSimilarity(a, b);
+  a = normalizeText(a);
+  b = normalizeText(b);
+  let prefix = 0;
+  for (let i = 0; i < Math.min(4, a.length, b.length); i++) {
+    if (a[i] === b[i]) prefix++;
+    else break;
+  }
+  return j + prefix * 0.1 * (1 - j);
+}
+
+/** Limiar mínimo de similaridade ajustado ao tamanho do termo */
+function fuzzyThreshold(term) {
+  if (term.length <= 2) return 1.0;
+  if (term.length === 3) return 0.72;
+  if (term.length === 4) return 0.70;
+  if (term.length <= 6) return 0.68;
+  return 0.66;
+}
+
+/** Distância de Damerau-Levenshtein (edição + transposição adjacente) */
+function damerauLevenshtein(a, b) {
+  a = normalizeText(a);
+  b = normalizeText(b);
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+/** Verifica se dois strings curtos contêm as mesmas letras (±1 diferença) */
+function sameLetterBag(a, b) {
+  a = normalizeText(a); b = normalizeText(b);
+  if (Math.abs(a.length - b.length) > 1 || a.length > 5) return false;
+  const count = s => { const m = new Map(); for (const c of s) m.set(c, (m.get(c) || 0) + 1); return m; };
+  const ma = count(a), mb = count(b);
+  let diff = 0;
+  for (const k of new Set([...ma.keys(), ...mb.keys()])) diff += Math.abs((ma.get(k) || 0) - (mb.get(k) || 0));
+  return diff <= 2;
+}
+
+/** Verifica se b é resultado de uma única transposição adjacente de a */
+function isAdjacentSwap(a, b) {
+  a = normalizeText(a); b = normalizeText(b);
+  if (a.length !== b.length || a.length < 2 || a === b) return false;
+  for (let i = 0; i < a.length - 1; i++) {
+    if (a.slice(0, i) + a[i + 1] + a[i] + a.slice(i + 2) === b) return true;
+  }
+  return false;
+}
+
+/** Score de similaridade combinado: Jaro-Winkler + Damerau-Levenshtein */
+function typoSimilarity(term, word) {
+  const t = normalizeText(term), w = normalizeText(word);
+  if (!t || !w) return 0;
+  if (t === w) return 1;
+  if (w.startsWith(t)) return 0.97;
+  if (w.includes(t)) return 0.90;
+  if (isAdjacentSwap(t, w)) return 0.95;
+  if (Math.max(t.length, w.length) <= 5 && sameLetterBag(t, w)) return 0.90;
+  const jw = jaroWinkler(t, w);
+  const dl = 1 - damerauLevenshtein(t, w) / Math.max(t.length, w.length);
+  return Math.max(jw, dl);
+}
+
+/** Maior score entre o termo e todos os tokens da mensagem */
+function bestWordScore(term, words) {
+  return words.reduce((best, word) => Math.max(best, typoSimilarity(term, word)), 0);
+}
+
+/**
+ * Pontua uma mensagem em relação ao input digitado.
+ * Retorna -1 se a mensagem não atingir o limiar mínimo.
+ */
+function scoreSuggestion(input, text) {
+  const query    = normalizeText(input);
+  const fullText = normalizeText(text);
+  if (!query || !fullText) return -1;
+
+  const terms = tokenize(input);
+  const words = tokenize(text);
+  if (!terms.length || !words.length) return -1;
+
+  let score = 0;
+  for (const term of terms) {
+    const best = bestWordScore(term, words);
+    if (best < fuzzyThreshold(term)) return -1;
+    score += best * 100;
+    if (words.some(w => w === term))          score += 35;
+    else if (words.some(w => w.startsWith(term))) score += 20;
+  }
+
+  if (fullText.startsWith(query))       score += 180;
+  else if (fullText.includes(query))    score += 70;
+
+  const pos = fullText.indexOf(terms[0]);
+  if (pos === 0)    score += 50;
+  else if (pos > 0) score += Math.max(0, 25 - pos);
+
+  score -= text.length * 0.03;
+  return score;
+}
+
+/**
+ * Retorna até 5 mensagens ordenadas por relevância para o input digitado.
+ */
+function getSmartSuggestions(input) {
+  return msgs
+    .map((msg, index) => {
+      const text = applyVars(msg);
+      return { index, raw: msg, text, score: scoreSuggestion(input, text) };
+    })
+    .filter(item => item.score >= 0)
+    .sort((a, b) => b.score - a.score || a.text.length - b.text.length)
+    .slice(0, 5);
+}
+
+/**
+ * Atualiza o elemento ghost-text com a parte ainda não digitada da sugestão.
+ * O span invisível garante alinhamento pixel-perfect com o input.
+ */
+function updateGhostText(input, suggestionText) {
+  const ghostText = document.getElementById("ghost-text");
+  if (!input || !suggestionText || !normalizeText(suggestionText).startsWith(normalizeText(input))) {
+    ghostText.innerHTML = "";
+    return;
+  }
+  ghostText.innerHTML =
+    `<span style="visibility:hidden">${escapeHtml(suggestionText.substring(0, input.length))}</span>${escapeHtml(suggestionText.substring(input.length))}`;
+}
+
+/** Renderiza os chips de sugestão abaixo do input */
+function renderSmartSuggestions() {
+  const wrap = document.getElementById("smart-suggestions");
+  wrap.innerHTML = "";
+  currentSuggestions.slice(0, 3).forEach((item, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "smart-suggestion" + (idx === currentSuggestionIndex ? " active" : "");
+    btn.type      = "button";
+    btn.title     = item.text;
+    btn.textContent = item.text;
+    btn.addEventListener("click", () => { currentSuggestionIndex = idx; acceptCurrentSuggestion(); });
+    wrap.appendChild(btn);
+  });
+}
+
+/** Limpa completamente o estado do smart compose */
+function clearSmartCompose() {
+  const si = document.getElementById("smart-input");
+  const gt = document.getElementById("ghost-text");
+  const sh = document.getElementById("smart-hint");
+  const sw = document.getElementById("smart-suggestions");
+  if (si) si.value = "";
+  if (gt) gt.innerHTML = "";
+  if (sw) sw.innerHTML = "";
+  if (sh) sh.classList.remove("visible");
+  currentPrediction = ""; currentSuggestions = []; currentSuggestionIndex = 0;
+}
+
+/**
+ * Completa o campo com a sugestão selecionada, copia para a área de
+ * transferência e limpa o campo após breve animação de confirmação.
+ */
+function acceptCurrentSuggestion() {
+  const smartInput = document.getElementById("smart-input");
+  const selected   = currentSuggestions[currentSuggestionIndex];
+  if (!selected) return;
+
+  currentPrediction   = selected.text;
+  smartInput.value    = currentPrediction;
+
+  navigator.clipboard.writeText(currentPrediction).then(() => {
+    smartInput.classList.add("copied-flash");
+    setTimeout(() => {
+      smartInput.classList.remove("copied-flash");
+      clearSmartCompose();
+    }, 1400);
+  });
+}
+
+/** Recalcula sugestões e atualiza a UI do smart compose */
+function refreshSmartCompose() {
+  const smartInput = document.getElementById("smart-input");
+  const smartHint  = document.getElementById("smart-hint");
+  const input      = smartInput.value.trim();
+
+  if (!input) { clearSmartCompose(); return; }
+
+  currentSuggestions     = getSmartSuggestions(input);
+  currentSuggestionIndex = 0;
+
+  if (!currentSuggestions.length) {
+    document.getElementById("ghost-text").innerHTML       = "";
+    document.getElementById("smart-suggestions").innerHTML = "";
+    currentPrediction = "";
+    smartHint.classList.remove("visible");
+    return;
+  }
+
+  currentPrediction = currentSuggestions[0].text;
+  updateGhostText(input, currentPrediction);
+  renderSmartSuggestions();
+  smartHint.classList.add("visible");
+}
+
+/**
+ * Registra os event listeners do smart compose.
+ * Deve ser chamado após load() para que msgs já esteja preenchido.
+ */
+function initSmartCompose() {
+  const smartInput = document.getElementById("smart-input");
+  smartInput.addEventListener("input", refreshSmartCompose);
+  smartInput.addEventListener("keydown", (e) => {
+    if (!currentSuggestions.length) { if (e.key === "Escape") clearSmartCompose(); return; }
+
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      currentSuggestionIndex = (currentSuggestionIndex + 1) % Math.min(currentSuggestions.length, 3);
+      currentPrediction      = currentSuggestions[currentSuggestionIndex].text;
+      updateGhostText(smartInput.value.trim(), currentPrediction);
+      renderSmartSuggestions();
+      return;
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const total = Math.min(currentSuggestions.length, 3);
+      currentSuggestionIndex = (currentSuggestionIndex - 1 + total) % total;
+      currentPrediction      = currentSuggestions[currentSuggestionIndex].text;
+      updateGhostText(smartInput.value.trim(), currentPrediction);
+      renderSmartSuggestions();
+      return;
+    }
+    if (e.key === "Tab" || e.key === "Enter") { e.preventDefault(); acceptCurrentSuggestion(); return; }
+    if (e.key === "Escape") { e.preventDefault(); clearSmartCompose(); }
+  });
+}
+
+/** Escapa caracteres HTML e preserva espaços no ghost-text */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/ /g, "\u00A0");
+}
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTÊNCIA (localStorage)
+// ═══════════════════════════════════════════════════════════
+
+/** Carrega mensagens, tema e nome do atendente do localStorage */
 function load() {
   try { msgs = JSON.parse(localStorage.getItem("hd_msgs") || "null") || [...DEFAULTS]; } catch { msgs = [...DEFAULTS]; }
   try { dark = localStorage.getItem("hd_dark") !== "false"; } catch {}
   try { document.getElementById("inp-nome").value = localStorage.getItem("hd_name") || ""; } catch {}
-  // [NEW] Always auto-detect period from system clock; buttons allow manual override per session
   period = autoDetectPeriod();
 }
 
+/** Persiste mensagens e preferência de tema */
 function save() {
   localStorage.setItem("hd_msgs", JSON.stringify(msgs));
   localStorage.setItem("hd_dark", String(dark));
 }
 
+/** Salva o nome do atendente e atualiza os cards (substitui {{nome}}) */
 function salvarNome() {
   localStorage.setItem("hd_name", document.getElementById("inp-nome").value);
   render(true);
 }
 
 // ═══════════════════════════════════════════════════════════
-// [NEW] AUTO PERIOD DETECTION
+// DETECÇÃO AUTOMÁTICA DE PERÍODO
 // ═══════════════════════════════════════════════════════════
+
+/** Retorna o período do dia baseado no relógio do sistema */
 function autoDetectPeriod() {
   const h = new Date().getHours();
   if (h < 12) return "manha";
@@ -561,8 +1091,13 @@ function autoDetectPeriod() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// VARIABLE SUBSTITUTION
+// SUBSTITUIÇÃO DE VARIÁVEIS
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * Substitui {{nome}} e {{saudacao}} em uma string pelos valores atuais.
+ * Usada tanto nos cards quanto no smart compose.
+ */
 function applyVars(text) {
   const nome = document.getElementById("inp-nome").value || "Suporte";
   const saud = GREETINGS[period] || "Olá";
@@ -570,89 +1105,95 @@ function applyVars(text) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// PERIOD
+// PERÍODO (manhã / tarde / noite)
 // ═══════════════════════════════════════════════════════════
+
+/** Define o período ativo e atualiza o destaque dos botões */
 function setPeriod(p) {
   period = p;
   ["manha", "tarde", "noite"].forEach(k => {
-    document.getElementById("btn-" + k).className = "period-btn" + (k === p ? " active-" + k : "");
+    document.getElementById("btn-" + k).className =
+      "period-btn" + (k === p ? " active-" + k : "");
   });
   render(true);
 }
 
 // ═══════════════════════════════════════════════════════════
-// DARK MODE
+// TEMA ESCURO / CLARO
 // ═══════════════════════════════════════════════════════════
+
+/** Aplica o tema atual ao body e atualiza o ícone do botão */
 function applyDark() {
   document.body.classList.toggle("light", !dark);
   const sun  = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
   const moon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
   document.getElementById("icon-dark").innerHTML = dark ? sun : moon;
 }
+
+/** Alterna tema e salva preferência */
 function toggleDark() { dark = !dark; save(); applyDark(); }
 
 // ═══════════════════════════════════════════════════════════
-// [NEW] WINDOW CONTROLS (via Electron IPC through preload)
+// CONTROLES DE JANELA (via preload.js → IPC)
 // ═══════════════════════════════════════════════════════════
-function minimizar() {
-  if (window.electronAPI) window.electronAPI.minimize();
-}
 
+/** Minimiza a janela do Electron */
+function minimizar() { if (window.electronAPI) window.electronAPI.minimize(); }
+
+/** Maximiza ou restaura a janela do Electron */
+function maximizar() { if (window.electronAPI) window.electronAPI.maximize(); }
+
+/**
+ * Calcula a altura ideal baseada no conteúdo e redimensiona a janela.
+ * Usa 2 colunas (largura 490px) quando há mais de 5 mensagens.
+ * CORREÇÃO: limite máximo era 300 (menor que o mínimo 320) — corrigido para 820.
+ */
 function resizeWindow() {
   if (!window.electronAPI) return;
   const twoCol = msgs.length > 5;
-  const w = twoCol ? 600 : 380;
-  
+  const w      = twoCol ? 490 : 360;
+
   requestAnimationFrame(() => {
     const titlebarEl = document.querySelector(".titlebar");
     const footerEl   = document.querySelector(".footer");
     const listaEl    = document.getElementById("lista");
     if (!titlebarEl || !footerEl || !listaEl) return;
 
-    // 1. Simulamos a nova largura na tela temporariamente
-    const oldBodyWidth = document.body.style.width;
-    document.body.style.width = w + "px";
-
-    // 2. Removemos as amarras do flex para ler o tamanho real do conteúdo
-    const oldFlex = listaEl.style.flex;
+    // Lê a altura real do conteúdo temporariamente fora do flex
+    const oldFlex   = listaEl.style.flex;
     const oldHeight = listaEl.style.height;
-    listaEl.style.flex = "none";
+    listaEl.style.flex   = "none";
     listaEl.style.height = "max-content";
-
-    // 3. Calculamos a altura precisa
-    const contentHeight = titlebarEl.offsetHeight + footerEl.offsetHeight + listaEl.offsetHeight;
-
-    // 4. Restauramos o layout
-    listaEl.style.flex = oldFlex;
+    const contentHeight  = titlebarEl.offsetHeight + footerEl.offsetHeight + listaEl.offsetHeight;
+    listaEl.style.flex   = oldFlex;
     listaEl.style.height = oldHeight;
-    document.body.style.width = oldBodyWidth;
 
-    // 5. Aplicamos o tamanho com os limites de segurança min/max
-    const h = Math.min(Math.max(contentHeight + 20, 320), 820);
+    const h = Math.min(Math.max(contentHeight + 20, 300), 420);
     window.electronAPI.setSize(w, h);
   });
 }
 
 // ═══════════════════════════════════════════════════════════
-// [NEW] DRAG AND DROP REORDER
+// DRAG AND DROP (reordenação de cards)
 // ═══════════════════════════════════════════════════════════
+
+/** Inicia o drag: guarda o índice de origem e anima o card */
 function onDragStart(e, i) {
   dragSrc = i;
   dragEl  = e.target.closest(".card");
   e.dataTransfer.effectAllowed = "move";
   e.dataTransfer.setData("text/plain", String(i));
-  // Small delay so the card isn't invisible before drag image renders
   setTimeout(() => { if (dragEl) dragEl.classList.add("dragging"); }, 0);
 }
 
-function onDragEnd(e) {
-  if (dragEl) dragEl.classList.remove("dragging");
-  if (dragEl) dragEl.classList.remove("shaking");
+/** Finaliza o drag: remove classes de animação */
+function onDragEnd() {
+  if (dragEl) { dragEl.classList.remove("dragging"); dragEl.classList.remove("shaking"); }
   document.querySelectorAll(".card.drag-over").forEach(c => c.classList.remove("drag-over"));
-  dragSrc = null;
-  dragEl  = null;
+  dragSrc = null; dragEl = null;
 }
 
+/** Marca o card alvo como destino de drop enquanto o cursor passa */
 function onCardDragOver(e, i) {
   e.preventDefault();
   e.dataTransfer.dropEffect = "move";
@@ -660,6 +1201,7 @@ function onCardDragOver(e, i) {
   e.currentTarget.classList.add("drag-over");
 }
 
+/** Realiza a troca de posição no array e re-renderiza a lista */
 function onCardDrop(e, i) {
   e.preventDefault();
   e.currentTarget.classList.remove("drag-over");
@@ -671,22 +1213,23 @@ function onCardDrop(e, i) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER MAIN LIST
-// [NEW] drag handles + two-column grid + auto window resize
+// RENDERIZAÇÃO DA LISTA PRINCIPAL
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * Renderiza todos os cards de mensagem no #lista.
+ * @param {boolean} skipResize — se true, não chama resizeWindow (evita loop)
+ */
 function render(skipResize = false) {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
-
-  // [NEW] Switch to 2-column grid when more than 5 messages
   lista.classList.toggle("two-col", msgs.length > 5);
 
   if (msgs.length === 0) {
     const empty = document.createElement("div");
-    empty.className = "empty";
+    empty.className   = "empty";
     empty.textContent = "Nenhuma mensagem. Adicione uma abaixo!";
     lista.appendChild(empty);
-    
     if (!skipResize) resizeWindow();
     return;
   }
@@ -695,16 +1238,9 @@ function render(skipResize = false) {
     const texto = applyVars(msg);
     const div   = document.createElement("div");
     div.className = "card";
-
-    // Drop target attributes
     div.setAttribute("ondragover", `onCardDragOver(event,${i})`);
     div.setAttribute("ondrop",     `onCardDrop(event,${i})`);
-
-    // Click to copy, but not if clicking the drag handle
-    div.onclick = (e) => {
-      if (!e.target.closest(".drag-handle")) copiar(texto, div);
-    };
-
+    div.onclick = (e) => { if (!e.target.closest(".drag-handle")) copiar(texto, div); };
     div.innerHTML = `
       <div class="drag-handle"
           draggable="true"
@@ -717,13 +1253,16 @@ function render(skipResize = false) {
           title="Arrastar para reordenar">${SVG_GRIP}</div>
       <div class="card-text">${texto}</div>
       <div class="copy-icon">${SVG_COPY}</div>`;
-
     lista.appendChild(div);
   });
 
   if (!skipResize) resizeWindow();
 }
 
+/**
+ * Copia o texto para a área de transferência e exibe feedback visual
+ * no card (ícone de check + cor de destaque por 1,8s).
+ */
 function copiar(texto, card) {
   navigator.clipboard.writeText(texto).then(() => {
     card.classList.add("copied");
@@ -736,20 +1275,27 @@ function copiar(texto, card) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MESSAGES MODAL (unchanged from working version)
+// MODAL — GERENCIAR MENSAGENS
 // ═══════════════════════════════════════════════════════════
+
+/** Abre o modal de mensagens, opcionalmente já em modo "adicionar" */
 function abrirModal(comecarAdicionando = false) {
   editIdx = null; addingNew = false;
   document.getElementById("overlay").classList.add("open");
   renderModal();
   if (comecarAdicionando) setTimeout(() => startAddNew(), 50);
 }
+
+/** Fecha o modal e reseta o estado de edição */
 function fecharModal() {
   document.getElementById("overlay").classList.remove("open");
   editIdx = null; addingNew = false;
 }
+
+/** Fecha o modal ao clicar no overlay (fora do card) */
 function fecharSeOverlay(e) { if (e.target === e.currentTarget) fecharModal(); }
 
+/** Renderiza a lista de mensagens dentro do modal com botões de edição/exclusão */
 function renderModal() {
   const lista = document.getElementById("modal-lista");
   lista.innerHTML = "";
@@ -814,19 +1360,26 @@ function renderModal() {
 
 function startEdit(i)  { editIdx = i; addingNew = false; renderModal(); }
 function cancelEdit()  { editIdx = null; renderModal(); }
+
+/** Salva a edição de uma mensagem existente */
 function saveEdit(i) {
   const val = (document.getElementById("edit-ta")?.value || "").trim();
   if (!val) return;
   msgs[i] = val; editIdx = null;
   save(); render(); renderModal();
 }
+
+/** Remove uma mensagem pelo índice */
 function deleteMsg(i) {
   msgs.splice(i, 1);
   if (editIdx === i) editIdx = null;
   save(); render(); renderModal();
 }
+
 function startAddNew() { addingNew = true; editIdx = null; renderModal(); }
 function cancelNew()   { addingNew = false; renderModal(); }
+
+/** Adiciona uma nova mensagem ao array e persiste */
 function saveNew() {
   const val = (document.getElementById("new-ta")?.value || "").trim();
   if (!val) return;
@@ -835,31 +1388,27 @@ function saveNew() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// [NEW] INFO MODAL
+// MODAL — SOBRE / INFORMAÇÕES
 // ═══════════════════════════════════════════════════════════
-function abrirInfo() {
-  document.getElementById("overlay-info").classList.add("open");
-}
 
-function fecharInfo() {
-  document.getElementById("overlay-info").classList.remove("open");
-}
-
+function abrirInfo()            { document.getElementById("overlay-info").classList.add("open"); }
+function fecharInfo()           { document.getElementById("overlay-info").classList.remove("open"); }
 function fecharInfoSeOverlay(e) { if (e.target === e.currentTarget) fecharInfo(); }
 
+/** Abre uma URL no navegador padrão do sistema via Electron shell */
 function abrirLink(url) {
   if (window.electronAPI) window.electronAPI.openExternal(url);
   else window.open(url, "_blank");
 }
 
-
 // ═══════════════════════════════════════════════════════════
-// INIT
+// INICIALIZAÇÃO — a ordem das chamadas é importante
 // ═══════════════════════════════════════════════════════════
-load();
-applyDark();
-setPeriod(period);   // applies auto-detected period and highlights correct button
-render();
+load();              // 1. carrega dados do localStorage (popula msgs)
+applyDark();         // 2. aplica o tema salvo
+setPeriod(period);   // 3. destaca o botão do período detectado
+render();            // 4. renderiza os cards
+initSmartCompose();  // 5. registra listeners do smart compose (após load)
 </script>
 </body>
 </html>

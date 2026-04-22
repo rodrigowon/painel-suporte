@@ -1,29 +1,28 @@
 /**
- * Painel Suporte Help Desk
- * Desenvolvido por: Rodrigo
+ * Hayai Desk — Painel de Suporte para atendimento rápido
+ * Desenvolvido por: Rodrigo Won
  * Ano: 2026
  * Repositório: https://github.com/rodrigowon/painel-suporte.git
  */
 
 const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
 const path = require("path");
-const fs = require("fs");
+const fs   = require("fs");
 
-// Ativa o reload automático durante o desenvolvimento
-try {
-  require('electron-reloader')(module);
-} catch (_) {}
+// Reload automático em desenvolvimento (ignorado em produção)
+try { require("electron-reloader")(module); } catch (_) {}
 
-app.setAppUserModelId("com.helpdesk.painel");
+app.setAppUserModelId("com.hayai.desk");
 
-let win;
+let win; // referência global à janela principal
 
+// Cria a janela principal do aplicativo
 function createWindow() {
   win = new BrowserWindow({
-    width: 380,
-    height: 600,
-    minWidth: 320,
-    minHeight: 350,
+    width: 400,
+    height: 300,
+    minWidth: 380,
+    minHeight: 335,
     alwaysOnTop: true,
     frame: false,
     show: false,
@@ -38,39 +37,48 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, "index.html"));
-  
-  win.once("ready-to-show", () => {
-    win.show();
-  });
+
+  // Exibe a janela apenas quando o conteúdo estiver pronto (evita flash branco)
+  win.once("ready-to-show", () => win.show());
 }
 
-ipcMain.on("win-minimize",  ()        => win && win.minimize());
-ipcMain.on("win-resize",    (e, w, h) => win && win.setSize(Math.round(w), Math.round(h)));
-ipcMain.on("open-external", (e, url)  => shell.openExternal(url));
+// Minimiza a janela
+ipcMain.on("win-minimize", () => win && win.minimize());
 
+// Alterna entre maximizado e restaurado
+// Usa o `win` do escopo do módulo — getFocusedWindow() pode retornar null
+ipcMain.on("win-maximize", () => {
+  if (!win) return;
+  win.isMaximized() ? win.unmaximize() : win.maximize();
+});
+
+// Redimensiona a janela para as dimensões calculadas pelo renderer
+ipcMain.on("win-resize", (e, w, h) => win && win.setSize(Math.round(w), Math.round(h)));
+
+// Abre uma URL no navegador padrão do sistema
+ipcMain.on("open-external", (e, url) => shell.openExternal(url));
+
+// Abre o diálogo nativo de seleção de imagem e retorna base64
 ipcMain.handle("dialog-open-file", async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog(win, {
     title: "Selecione a Logo",
     properties: ["openFile"],
     filters: [
       { name: "Imagens", extensions: ["png", "jpg", "jpeg", "webp", "gif", "svg"] },
-      { name: "Todos os arquivos", extensions: ["*"] } // 👈 Devolvemos essa opção
-    ]
+      { name: "Todos os arquivos", extensions: ["*"] },
+    ],
   });
 
   if (canceled || filePaths.length === 0) return null;
 
   const filePath = filePaths[0];
-  const data = fs.readFileSync(filePath);
-  const ext = path.extname(filePath).toLowerCase();
-  
-  let mime = 'image/png';
-  if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
-  if (ext === '.webp') mime = 'image/webp';
-  if (ext === '.svg') mime = 'image/svg+xml';
-  if (ext === '.gif') mime = 'image/gif';
+  const data     = fs.readFileSync(filePath);
+  const ext      = path.extname(filePath).toLowerCase();
 
-  return `data:${mime};base64,${data.toString('base64')}`;
+  const mimeMap = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml", ".gif": "image/gif" };
+  const mime    = mimeMap[ext] || "image/png";
+
+  return `data:${mime};base64,${data.toString("base64")}`;
 });
 
 app.whenReady().then(createWindow);

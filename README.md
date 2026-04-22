@@ -1,90 +1,108 @@
-# Painel Suporte — Help Desk 🚀
+# Hayai Desk 🚀
 
-Painel flutuante de mensagens rápidas para atendimento.
+Painel flutuante de respostas rápidas para atendimento Help Desk.  
+Sempre no topo, modo escuro/claro, smart compose com busca inteligente e reordenação por drag & drop.
 
 ---
 
 ## ⚡ Como gerar o .EXE
 
-### 1. Instale o Node.js (se não tiver)
-Baixe em: https://nodejs.org  
-Versão recomendada: **LTS (18 ou 20)**
+### 1. Instale o Node.js
+Baixe em: https://nodejs.org — versão recomendada: **LTS (18 ou 20)**
 
 ### 2. Abra o terminal na pasta do projeto
-Clique com botão direito na pasta `painel-suporte` → "Abrir no Terminal"  
-(ou no VS Code: terminal integrado)
+Clique com botão direito na pasta `hayai-desk` → "Abrir no Terminal"
 
 ### 3. Instale as dependências
 ```bash
 npm install
 ```
-Aguarde baixar (~200MB na primeira vez — é o Electron)
+Aguarde (~300 MB na primeira vez — inclui o Electron)
 
 ### 4. Teste antes de empacotar
 ```bash
 npm start
 ```
-O painel vai abrir. Se estiver tudo certo, feche e siga.
+O painel deve abrir. Se tudo estiver correto, feche e prossiga.
 
-### 5. Gere o .EXE portátil (sem instalador — só copiar e rodar)
+### 5. Gere o .EXE portátil
 ```bash
 npm run build
 ```
-O arquivo `.exe` ficará em: `dist/Painel Suporte*.exe`
+Saída: `dist/Hayai Desk.exe` — basta copiar e executar em qualquer máquina.
 
-### 6. (Opcional) Gere com instalador
+### 6. Gere com instalador (opcional)
 ```bash
 npm run build:installer
 ```
-Gera um instalador que cria atalho no Desktop e Menu Iniciar.
+Gera `dist/Hayai Desk Setup.exe` com atalho no Desktop e Menu Iniciar.
 
 ---
 
-## 📁 Estrutura dos arquivos
+## 📁 Estrutura do projeto
+
 ```
-painel-suporte/
-├── index.html     ← Interface (HTML/CSS/JS)
-├── main.js        ← Electron (cria a janela)
-├── package.json   ← Configurações e dependências
-├── icon.ico       ← Ícone (opcional — coloque aqui)
-└── README.md      ← Este arquivo
+hayai-desk/
+├── build/
+│   ├── icon.ico       ← Ícone do app (256×256 recomendado)
+│   ├── logo.png       ← Logo exibida no botão do rodapé
+│   └── logotr.png     ← Variante com fundo transparente (opcional)
+├── dist/              ← Gerado pelo build (não versionar)
+├── node_modules/      ← Gerado pelo npm install (não versionar)
+├── index.html         ← Interface completa (HTML/CSS/JS)
+├── main.js            ← Processo principal do Electron
+├── preload.js         ← Bridge segura entre renderer e main
+├── package.json       ← Dependências e configuração de build
+└── README.md          ← Este arquivo
 ```
 
 ---
 
 ## 🎨 Como personalizar o ícone
-1. Crie ou baixe um `.ico` (ex: https://icoconvert.com)
-2. Salve como `icon.ico` na pasta do projeto
-3. Gere o .exe novamente com `npm run build`
+
+1. Crie ou converta sua imagem em `.ico` em: https://icoconvert.com (256×256)
+2. Salve como `icon.ico` dentro da pasta `build/`
+3. Gere o executável novamente com `npm run build`
 
 ---
 
-## 📤 Como enviar para outras máquinas
+## 📤 Como distribuir para outras máquinas
 
-**Versão portátil** (recomendado):
-- Copie o `Painel Suporte*.exe` da pasta `dist/`
-- Cole na máquina de destino — sem instalar nada, só dar dois cliques
+**Versão portátil** (recomendado para distribuição rápida):
+- Copie `dist/Hayai Desk.exe` para a máquina de destino
+- Execute diretamente — sem instalação necessária
 
-**Versão instalador**:
-- Copie o `Painel Suporte Setup*.exe` da pasta `dist/`
-- Execute na máquina de destino — instala com atalho no Desktop
+**Versão com instalador**:
+- Copie `dist/Hayai Desk Setup.exe` para a máquina de destino
+- Execute o instalador — cria atalho no Desktop e Menu Iniciar automaticamente
 
 ---
 
-## 🔧 Dicas
-- O painel fica **sempre no topo** de outras janelas
-- Mensagens, nome e configurações ficam **salvos localmente**
-- Use `{{nome}}` e `{{saudacao}}` nas mensagens para personalizar
+## 🔧 Funcionalidades
+
+| Recurso | Descrição |
+|---|---|
+| Respostas rápidas | Clique num card para copiar a mensagem |
+| `{{nome}}` / `{{saudacao}}` | Variáveis substituídas automaticamente |
+| Período automático | Detecta manhã/tarde/noite pelo relógio do sistema |
+| Smart Compose | Digite palavras-chave e pressione Tab/Enter para autocompletar e copiar |
+| Drag & drop | Reordene os cards arrastando pelo ícone de grip |
+| 2 colunas | Layout em grade quando há mais de 5 mensagens |
+| Modo escuro/claro | Alternável pelo botão na barra de título |
+| Sempre no topo | A janela fica sobre todas as outras |
 
 ---
 
 ## ❓ Problemas comuns
 
-**"npm não é reconhecido"**  
-→ Reinstale o Node.js e reinicie o terminal
+**`npm` não é reconhecido**  
+→ Reinstale o Node.js e reinicie o terminal ou o computador.
 
 **Build falhou com erro de ícone**  
-→ Delete a linha `"icon": "icon.ico"` do package.json ou crie o arquivo icon.ico
+→ Certifique-se de que `build/icon.ico` existe, ou remova as linhas `"icon"` do `package.json`.
 
 **Antivírus bloqueou o .exe**  
-→ Normal com executáveis Electron sem assinatura digital. Adicione exceção no antivírus.
+→ Esperado em executáveis Electron sem assinatura digital. Adicione uma exceção no antivírus ou assine digitalmente o executável.
+
+**Janela abre com altura errada**  
+→ Feche e reabra o aplicativo. O redimensionamento automático leva um frame para calcular.

@@ -1,7 +1,7 @@
 {
-  "name": "painel-suporte",
-  "version": "1.0.0",
-  "description": "Painel de mensagens rápidas para Help Desk",
+  "name": "hayai-desk",
+  "version": "1.2.0",
+  "description": "Hayai Desk - respostas rápidas para suporte",
   "main": "main.js",
   "author": { "name": "Rodrigo <rodrigosilvadeveloper>@gmail.com" },
   "scripts": {
@@ -10,8 +10,8 @@
     "build:installer": "electron-builder --win nsis"
   },
   "build": {
-    "appId": "com.helpdesk.painel",
-    "productName": "Painel Suporte",
+    "appId": "com.hayai.desk",
+    "productName": "Hayai Desk",
     "directories": {
       "output": "dist"
     },
@@ -37,7 +37,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Painel Suporte"
+      "shortcutName": "Hayai Desk"
     },
     "files": [
       "index.html",
