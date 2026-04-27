@@ -9,8 +9,12 @@ const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
 const path = require("path");
 const fs   = require("fs");
 
-// Reload automático em desenvolvimento (ignorado em produção)
-try { require("electron-reloader")(module); } catch (_) {}
+// Reload automático apenas em desenvolvimento
+if (!app.isPackaged) {
+  try {
+    require("electron-reloader")(module);
+  } catch (_) {}
+}
 
 app.setAppUserModelId("com.hayai.desk");
 
@@ -20,7 +24,7 @@ let win; // referência global à janela principal
 function createWindow() {
   win = new BrowserWindow({
     width: 400,
-    height: 300,
+    height: 335,
     minWidth: 380,
     minHeight: 335,
     alwaysOnTop: true,
@@ -33,6 +37,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false, // mantém timers precisos mesmo com a janela minimizada
+      spellcheck: false,           // evita inicialização do spell-checker desnecessário
     },
   });
 
@@ -53,10 +59,27 @@ ipcMain.on("win-maximize", () => {
 });
 
 // Redimensiona a janela para as dimensões calculadas pelo renderer
-ipcMain.on("win-resize", (e, w, h) => win && win.setSize(Math.round(w), Math.round(h)));
+ipcMain.on("win-resize", (e, w, h) => {
+  if (!win) return;
 
-// Abre uma URL no navegador padrão do sistema
-ipcMain.on("open-external", (e, url) => shell.openExternal(url));
+  const width = Math.min(Math.max(Math.round(Number(w) || 400), 380), 1200);
+  const height = Math.min(Math.max(Math.round(Number(h) || 335), 335), 900);
+
+  win.setSize(width, height);
+});
+
+// Abre uma URL no navegador padrão do sistema com validação básica
+ipcMain.on("open-external", (e, url) => {
+  try {
+    const parsed = new URL(url);
+
+    if (!["http:", "https:"].includes(parsed.protocol)) return;
+
+    shell.openExternal(parsed.toString());
+  } catch {
+    return;
+  }
+});
 
 // Abre o diálogo nativo de seleção de imagem e retorna base64
 ipcMain.handle("dialog-open-file", async () => {

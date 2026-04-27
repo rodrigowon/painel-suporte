@@ -36,6 +36,9 @@
       --suggest-bg-act:   rgba(41,89,250,.10);
       --suggest-brd-act:  rgba(41,89,250,.28);
       --suggest-text-act: #dfe5f3;
+      --token-purple: #9d41f3;
+      --token-purple-bg: rgba(168, 85, 247, 0.12);
+      --token-purple-border: rgba(168, 85, 247, 0.28);
     }
 
     /* ── TEMA CLARO ────────────────────────────────────────── */
@@ -128,7 +131,25 @@
       gap: 4px;
       padding: 8px 12px 0;
       flex-shrink: 0;
+      max-height: 44px;
+      overflow: hidden;
+      opacity: 1;
+      transform: translateY(0);
+      transition:
+        max-height .22s ease,
+        padding .22s ease,
+        opacity .18s ease,
+        transform .22s ease;
     }
+
+    .period-row.hidden-on-scroll {
+      max-height: 0;
+      padding-top: 0;
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+    }
+
     .period-btn {
       flex: 1;
       background: var(--pill);
@@ -297,6 +318,20 @@
     }
     .overlay.open { display: flex; }
 
+    .modal-close-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close-btn svg {
+      pointer-events: none;
+    }
+
     .modal {
       background: var(--panel); border: 1px solid var(--border);
       border-radius: 14px; width: 100%; max-width: 400px;
@@ -308,8 +343,22 @@
       flex-shrink: 0;
     }
     .modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
-    .modal-hint  { font-size: 11px; color: var(--muted); padding: 8px 16px 4px; flex-shrink: 0; }
-    .modal-hint code { color: var(--accent); background: var(--pill); padding: 1px 4px; border-radius: 3px; }
+    
+    .modal-hint  { 
+      font-size: 11px; 
+      color: var(--muted); 
+      padding: 8px 16px 4px; 
+      flex-shrink: 0; 
+    }
+
+    .modal-hint code {
+      color: var(--token-purple);
+      background: var(--token-purple-bg);
+      border: 1px solid var(--token-purple-border);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
 
     .modal-list {
       overflow-y: auto; flex: 1; padding: 8px 10px;
@@ -407,7 +456,112 @@
       padding: 0 20px;
     }
 
-    .smart-compose-icon { margin-bottom: 16px; opacity: .7; }
+    .smart-compose-icon {
+      margin-bottom: 16px;
+      opacity: 1;
+    }
+
+    .ai-core {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      isolation: isolate;
+    }
+
+    .ai-core::before {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, rgba(168,85,247,.26) 0%, rgba(41,89,250,.13) 48%, rgba(34,211,238,.05) 100%);
+      filter: blur(12px);
+      opacity: .95;
+      animation: aiGlowPulse 3.4s ease-in-out infinite;
+    }
+
+    .ai-ring {
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(41,89,250,0),
+          rgba(41,89,250,.85),
+          rgba(168,85,247,.95),
+          rgba(34,211,238,.85),
+          rgba(41,89,250,0)
+        );
+      animation: aiRingSpin 14s linear infinite;
+      filter: drop-shadow(0 0 7px rgba(168,85,247,.35));
+      opacity: .82;
+      z-index: 0;
+    }
+
+    .ai-ring::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: inherit;
+      background: var(--bg);
+    }
+
+    .ai-ring-soft {
+      width: 38px;
+      height: 38px;
+      opacity: .34;
+      animation-duration: 18s;
+      animation-direction: reverse;
+      filter: blur(.2px) drop-shadow(0 0 9px rgba(34,211,238,.22));
+    }
+
+    .ai-sparkle {
+      position: relative;
+      z-index: 3;
+      color: #5b7cfa;
+      animation:
+        aiIconFloat 3.2s ease-in-out infinite,
+        aiIconColor 7.5s linear infinite;
+      filter:
+        drop-shadow(0 0 8px rgba(91,124,250,.34))
+        drop-shadow(0 0 14px rgba(168,85,247,.22));
+    }
+
+    
+
+    @keyframes aiRingSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes aiGlowPulse {
+      0%, 100% {
+        transform: scale(.92);
+        opacity: .55;
+      }
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
+    }
+
+    @keyframes aiIconFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-2px) scale(1.045); }
+    }
+
+    @keyframes aiIconColor {
+      0%   { color: #5b7cfa; }
+      35%  { color: #a855f7; }
+      70%  { color: #22d3ee; }
+      100% { color: #5b7cfa; }
+    }
+
+  
 
     /* Container que empilha ghost (z-index 1) e input (z-index 2) */
     .smart-input-container {
@@ -495,6 +649,15 @@
     }
     .smart-hint.visible { opacity: 1; }
     .smart-hint strong  { color: var(--text); }
+
+    /* ── BOTÕES SOMENTE ÍCONE (footer) ─────────────────────── */
+    .btn-icon-only { padding: 7px !important; gap: 0 !important; }
+
+    /* performance: avisa o browser que esses elementos vão animar */
+    .card.dragging, .card.shaking { will-change: transform; }
+
+    /* data de lançamento na aba Sobre */
+    .info-release { font-size: 11px; color: var(--muted); margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -562,23 +725,27 @@
       VIEW DIGITAÇÃO — smart compose com texto preditivo
 ════════════════════════════════════════════════════════════ -->
 <div id="view-texto">
-  <div class="smart-compose-icon">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-    </svg>
-  </div>
+  <div class="smart-compose-icon ai-core" title="IA ativa">
+    <span class="ai-ring"></span>
+    <span class="ai-ring ai-ring-soft"></span>
+
+  <!-- <svg class="ai-sparkle" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+    <path d="M20 3v4M22 5h-4"/>
+  </svg> -->
+</div>
 
   <div class="smart-input-container">
     <div id="ghost-text" class="ghost-text"></div>
     <input type="text" id="smart-input" class="smart-input"
-          placeholder="Comece a digitar..."
+          placeholder="Palavra-chave ou @Nome do cliente..."
           autocomplete="off" spellcheck="false">
   </div>
 
   <div class="smart-suggestions" id="smart-suggestions"></div>
 
   <div class="smart-hint" id="smart-hint">
-    Pressione <strong>Tab</strong> ou <strong>Enter</strong> para autocompletar e copiar.
+    <strong>Tab</strong> ou <strong>Enter</strong> para copiar · Use <strong>@Nome</strong> para personalizar com o nome do cliente.
   </div>
 </div>
 
@@ -593,22 +760,19 @@
 
   <div class="footer-spacer"></div>
 
-  <button class="btn-secondary" onclick="abrirModal()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Mensagens
+  <button class="btn-primary btn-icon-only" onclick="abrirModal(true)" title="Adicionar mensagem">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
 
-  <button class="btn-primary" onclick="abrirModal(true)">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Adicionar
-  </button>
-
-  <button class="settings-btn" id="btn-mode" onclick="toggleMode()">
+  <button class="settings-btn btn-icon-only" id="btn-mode" onclick="toggleMode()" title="Modo digitação">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
       <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/>
     </svg>
-    Digitação
+  </button>
+
+  <button class="btn-secondary btn-icon-only" onclick="abrirModal()" title="Gerenciar mensagens">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
 </div>
 
@@ -619,7 +783,7 @@
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">Gerenciar Mensagens</span>
-      <button class="icon-btn" onclick="fecharModal()">
+      <button class="icon-btn modal-close-btn" type="button" onclick="fecharModal()" title="Fechar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -635,7 +799,7 @@
   <div class="info-modal">
     <div class="modal-header">
       <span class="modal-title">Sobre</span>
-      <button class="icon-btn" onclick="fecharInfo()">
+      <button class="icon-btn modal-close-btn" type="button" onclick="fecharInfo()" title="Fechar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -646,7 +810,8 @@
         </div>
         <div>
           <div class="info-app-name">Hayai Desk</div>
-          <div class="info-version">Versão 1.2.0</div>
+          <div class="info-version">Versão 1.3.0</div>
+          <div class="info-release">27 de abril de 2026</div>
         </div>
       </div>
 
@@ -654,7 +819,7 @@
 
       <div class="info-dev">
         Desenvolvido por @rodrigowon para atendimento Help Desk Schumann.<br>
-        Feito com Electron e Vanilla JS.
+        Feito com Electron, HTML/CSS e JavaScript puro.
       </div>
 
       <div>
@@ -723,23 +888,18 @@ function toggleMode() {
     viewBotoes.style.display = "none";
     viewTexto.style.display  = "flex";
     btnMode.classList.add("active");
-    btnMode.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-      </svg> Botões`;
+    // Ícone de grid (4 quadrados) = "voltar para botões"
+    btnMode.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`;
+    btnMode.title = "Voltar para botões";
     setTimeout(() => document.getElementById("smart-input").focus(), 50);
   } else {
     modoAtual = "botoes";
     viewBotoes.style.display = "flex";
     viewTexto.style.display  = "none";
     btnMode.classList.remove("active");
-    btnMode.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
-        <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/>
-      </svg> Digitação`;
-    // Limpa o campo ao sair do modo digitação
+    // Ícone de teclado = "modo digitação"
+    btnMode.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></svg>`;
+    btnMode.title = "Modo digitação";
     clearSmartCompose();
   }
 }
@@ -914,17 +1074,74 @@ function scoreSuggestion(input, text) {
 }
 
 /**
- * Retorna até 5 mensagens ordenadas por relevância para o input digitado.
+ * Retorna até 5 mensagens ordenadas por relevância.
+ * Se o input começar com @, usa o texto após @ como nome do cliente.
+ * Ex: @Ana substitui {{nome}} por Ana.
+ * Sem @, faz busca normal e remove {{nome}} das sugestões.
  */
 function getSmartSuggestions(input) {
+  const rawInput   = input.trim();
+  const isNameMode = rawInput.startsWith("@");
+  const clientName = isNameMode ? rawInput.slice(1).trim() : "";
+  const searchTerm = isNameMode ? clientName : rawInput;
+
+  if (!searchTerm) return [];
+
+  const saudacaoAtual = normalizeText(GREETINGS[period] || "Olá");
+
   return msgs
     .map((msg, index) => {
-      const text = applyVars(msg);
-      return { index, raw: msg, text, score: scoreSuggestion(input, text) };
+      const text = applyVarsForSearch(msg, clientName);
+
+      let score = scoreSuggestion(searchTerm, text);
+
+      if (score >= 0 && isNameMode) {
+        const normalizedText = normalizeText(text);
+        const normalizedRaw  = normalizeText(msg);
+
+        // Prioriza a saudação do período atual: Bom dia / Boa tarde / Boa noite
+        if (normalizedText.startsWith(saudacaoAtual)) {
+          score += 500;
+        }
+
+        // Prioriza mensagens que usam {{saudacao}}, porque acompanham manhã/tarde/noite
+        if (normalizedRaw.includes("{{saudacao}}")) {
+          score += 300;
+        }
+
+        // Deixa "Olá" genérico abaixo da saudação do período quando estiver usando @Nome
+        if (normalizedText.startsWith("ola") && !normalizedText.startsWith(saudacaoAtual)) {
+          score -= 100;
+        }
+      }
+
+      return { index, raw: msg, text, score };
     })
     .filter(item => item.score >= 0)
     .sort((a, b) => b.score - a.score || a.text.length - b.text.length)
     .slice(0, 5);
+}
+
+/**
+ * Variante de applyVars para o smart compose: substitui {{nome}} pelo
+ * clientName fornecido (ex: nome digitado pelo atendente) em vez do campo
+ * de nome do atendente, permitindo personalização em tempo real.
+ */
+function applyVarsForSearch(text, clientName = "") {
+  const saud = GREETINGS[period] || "Olá";
+
+  let result = text.replace(/\{\{saudacao\}\}/gi, saud);
+
+  if (clientName) {
+    result = result.replace(/\{\{nome\}\}/gi, clientName);
+  } else {
+    result = result.replace(/\s*\{\{nome\}\}\s*/gi, " ");
+  }
+
+  return result
+    .replace(/\s+([,.!?;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 /**
@@ -978,20 +1195,32 @@ function acceptCurrentSuggestion() {
   const selected   = currentSuggestions[currentSuggestionIndex];
   if (!selected) return;
 
-  currentPrediction   = selected.text;
-  smartInput.value    = currentPrediction;
+  currentPrediction = selected.text;
+  smartInput.value  = currentPrediction;
 
-  navigator.clipboard.writeText(currentPrediction).then(() => {
-    smartInput.classList.add("copied-flash");
-    setTimeout(() => {
-      smartInput.classList.remove("copied-flash");
-      clearSmartCompose();
-    }, 1400);
-  });
+  navigator.clipboard.writeText(currentPrediction)
+    .then(() => {
+      smartInput.classList.add("copied-flash");
+      setTimeout(() => {
+        smartInput.classList.remove("copied-flash");
+        clearSmartCompose();
+      }, 1400);
+    })
+    .catch(() => {
+      alert("Não foi possível copiar a sugestão.");
+    });
 }
 
-/** Recalcula sugestões e atualiza a UI do smart compose */
+/** Timer interno para debounce do smart compose */
+let _smartDebounce = null;
+
+/** Recalcula sugestões e atualiza a UI do smart compose (com debounce de 60ms) */
 function refreshSmartCompose() {
+  clearTimeout(_smartDebounce);
+  _smartDebounce = setTimeout(_execRefreshSmartCompose, 60);
+}
+
+function _execRefreshSmartCompose() {
   const smartInput = document.getElementById("smart-input");
   const smartHint  = document.getElementById("smart-hint");
   const input      = smartInput.value.trim();
@@ -1021,7 +1250,7 @@ function refreshSmartCompose() {
  */
 function initSmartCompose() {
   const smartInput = document.getElementById("smart-input");
-  smartInput.addEventListener("input", refreshSmartCompose);
+  smartInput.addEventListener("input", refreshSmartCompose); // debounced
   smartInput.addEventListener("keydown", (e) => {
     if (!currentSuggestions.length) { if (e.key === "Escape") clearSmartCompose(); return; }
 
@@ -1052,6 +1281,15 @@ function escapeHtml(str) {
   return str
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/ /g, "\u00A0");
+}
+
+function escapeText(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1118,6 +1356,42 @@ function setPeriod(p) {
   render(true);
 }
 
+let lastListaScrollTop = 0;
+
+/**
+ * Esconde a barra Manhã/Tarde/Noite ao rolar a lista para baixo
+ * e a exibe novamente ao rolar para cima ou ao voltar ao topo.
+ */
+function initPeriodAutoHide() {
+  const lista = document.getElementById("lista");
+  const periodRow = document.querySelector(".period-row");
+
+  if (!lista || !periodRow) return;
+
+  lista.addEventListener("scroll", () => {
+    const currentTop = lista.scrollTop;
+
+    // No topo da lista, sempre mostra os botões
+    if (currentTop <= 4) {
+      periodRow.classList.remove("hidden-on-scroll");
+      lastListaScrollTop = currentTop;
+      return;
+    }
+
+    // Rolou para baixo: esconde
+    if (currentTop > lastListaScrollTop + 4) {
+      periodRow.classList.add("hidden-on-scroll");
+    }
+
+    // Rolou para cima: mostra
+    if (currentTop < lastListaScrollTop - 4) {
+      periodRow.classList.remove("hidden-on-scroll");
+    }
+
+    lastListaScrollTop = currentTop;
+  });
+}
+
 // ═══════════════════════════════════════════════════════════
 // TEMA ESCURO / CLARO
 // ═══════════════════════════════════════════════════════════
@@ -1145,30 +1419,43 @@ function maximizar() { if (window.electronAPI) window.electronAPI.maximize(); }
 
 /**
  * Calcula a altura ideal baseada no conteúdo e redimensiona a janela.
- * Usa 2 colunas (largura 490px) quando há mais de 5 mensagens.
- * CORREÇÃO: limite máximo era 300 (menor que o mínimo 320) — corrigido para 820.
+ * Usa 2 colunas com largura maior quando há mais de 5 mensagens.
+ * Mantém a janela dentro de uma faixa mínima e máxima de altura.
  */
 function resizeWindow() {
   if (!window.electronAPI) return;
+
   const twoCol = msgs.length > 5;
-  const w      = twoCol ? 490 : 360;
+  const w = twoCol ? 520 : 400;
 
   requestAnimationFrame(() => {
     const titlebarEl = document.querySelector(".titlebar");
     const footerEl   = document.querySelector(".footer");
+    const periodEl   = document.querySelector(".period-row");
     const listaEl    = document.getElementById("lista");
+
     if (!titlebarEl || !footerEl || !listaEl) return;
 
-    // Lê a altura real do conteúdo temporariamente fora do flex
     const oldFlex   = listaEl.style.flex;
     const oldHeight = listaEl.style.height;
+
     listaEl.style.flex   = "none";
     listaEl.style.height = "max-content";
-    const contentHeight  = titlebarEl.offsetHeight + footerEl.offsetHeight + listaEl.offsetHeight;
+
+    const periodHeight = periodEl && !periodEl.classList.contains("hidden-on-scroll")
+      ? periodEl.offsetHeight
+      : 0;
+
+    const contentHeight =
+      titlebarEl.offsetHeight +
+      periodHeight +
+      footerEl.offsetHeight +
+      listaEl.offsetHeight;
+
     listaEl.style.flex   = oldFlex;
     listaEl.style.height = oldHeight;
 
-    const h = Math.min(Math.max(contentHeight + 20, 300), 420);
+    const h = Math.min(Math.max(contentHeight + 20, 335), 420);
     window.electronAPI.setSize(w, h);
   });
 }
@@ -1251,7 +1538,7 @@ function render(skipResize = false) {
           onmouseleave="this.closest('.card').classList.remove('shaking')"
           onclick="event.stopPropagation()"
           title="Arrastar para reordenar">${SVG_GRIP}</div>
-      <div class="card-text">${texto}</div>
+      <div class="card-text">${escapeText(texto)}</div>
       <div class="copy-icon">${SVG_COPY}</div>`;
     lista.appendChild(div);
   });
@@ -1264,13 +1551,17 @@ function render(skipResize = false) {
  * no card (ícone de check + cor de destaque por 1,8s).
  */
 function copiar(texto, card) {
-  navigator.clipboard.writeText(texto).then(() => {
+  navigator.clipboard.writeText(texto)
+  .then(() => {
     card.classList.add("copied");
     card.querySelector(".copy-icon").innerHTML = SVG_CHECK;
     setTimeout(() => {
       card.classList.remove("copied");
       card.querySelector(".copy-icon").innerHTML = SVG_COPY;
     }, 1800);
+  })
+  .catch(() => {
+    alert("Não foi possível copiar a mensagem.");
   });
 }
 
@@ -1307,7 +1598,7 @@ function renderModal() {
     if (editIdx === i) {
       div.innerHTML = `
         <div style="flex:1">
-          <textarea id="edit-ta">${msg}</textarea>
+          <textarea id="edit-ta">${escapeText(msg)}</textarea>
           <div class="edit-actions">
             <button class="edit-btn save" onclick="saveEdit(${i})">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2l11 0 5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1322,7 +1613,7 @@ function renderModal() {
       }, 30);
     } else {
       div.innerHTML = `
-        <div class="modal-card-text">${applyVars(msg)}</div>
+        <div class="modal-card-text">${escapeText(applyVars(msg))}</div>
         <div class="modal-card-actions">
           <button class="sm-btn" onclick="startEdit(${i})" title="Editar">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1371,9 +1662,13 @@ function saveEdit(i) {
 
 /** Remove uma mensagem pelo índice */
 function deleteMsg(i) {
+  if (!confirm("Excluir esta mensagem?")) return;
+
   msgs.splice(i, 1);
   if (editIdx === i) editIdx = null;
-  save(); render(); renderModal();
+  save();
+  render();
+  renderModal();
 }
 
 function startAddNew() { addingNew = true; editIdx = null; renderModal(); }
@@ -1409,6 +1704,14 @@ applyDark();         // 2. aplica o tema salvo
 setPeriod(period);   // 3. destaca o botão do período detectado
 render();            // 4. renderiza os cards
 initSmartCompose();  // 5. registra listeners do smart compose (após load)
+initPeriodAutoHide();
+
+// 6. Verifica o período a cada minuto e atualiza automaticamente
+//    (resolve o problema de "Bom dia" aparecer à tarde com o app aberto)
+setInterval(() => {
+  const novoPeriodo = autoDetectPeriod();
+  if (novoPeriodo !== period) setPeriod(novoPeriodo);
+}, 60_000);
 </script>
 </body>
 </html>
