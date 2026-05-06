@@ -3,3 +3,6 @@ dist/
 build/
 .DS_Store/
 npm-debug.log
+*.log
+.DS_Store
+Thumbs.db
